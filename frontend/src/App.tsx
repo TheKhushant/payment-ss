@@ -14,8 +14,11 @@ import Courses from "./pages/Courses";
 import CreateStudent from "./pages/CreateStudent";
 import Tracking from "./pages/Tracking";
 import Analytics from "./pages/Analytics";
+import RecordPaymentModal from "./pages/RecordPaymentModal";
+// import { useState } from "react";
 
 function App() {
+  // const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   return (
     <BrowserRouter>
       <Routes>
@@ -28,6 +31,15 @@ function App() {
           <Route path="/tracking" element={<Tracking/>}/>
           <Route path="/create-student" element={<CreateStudent/>}/>
           <Route path="/analytics"  element={<Analytics />}/>
+          <Route
+            path="/addpayment"
+            element={
+              <RecordPaymentModal
+                isOpen={true}
+                onClose={() => window.history.back()}
+              />
+            }
+          />
         </Route>
       </Routes>
     </BrowserRouter>

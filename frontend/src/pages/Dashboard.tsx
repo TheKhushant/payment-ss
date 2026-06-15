@@ -88,19 +88,19 @@ export default function Dashboard() {
         
         <div className="flex gap-3">
           <button 
-            onClick={() => alert("Navigate to Reports")}
+            onClick={() => navigate("/tracking")}
             className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium transition"
           >
-            Reports
+            Tracking
           </button>
           <button 
-            onClick={() => alert("Navigate to Courses")}
+            onClick={() => navigate("/courses")}
             className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium transition"
           >
             Courses
           </button>
           <button 
-            onClick={() => alert("Open Add Payments")}
+            onClick={() => navigate("/addpayment")}
             className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition"
           >
             Add Payments
