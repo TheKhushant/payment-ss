@@ -10,6 +10,8 @@ export default function Dashboard() {
   const [courses, setCourses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
+  console.log(courses, loading);
+
   useEffect(() => {
     loadData();
   }, []);

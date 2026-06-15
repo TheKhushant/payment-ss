@@ -23,8 +23,15 @@ export default function Students() {
     try {
       setLoading(true);
       const data = await getStudents();
-      setStudents(data || []);
-      setFilteredStudents(data || []);
+
+      const sortedData = [...(data || [])].sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() -
+          new Date(a.createdAt).getTime()
+      );
+
+      setStudents(sortedData);
+      setFilteredStudents(sortedData);
     } catch (err) {
       console.error(err);
     } finally {

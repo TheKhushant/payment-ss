@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
-import { getCourses, deleteCourse, createCourse, updateCourse, } from "../services/courseService";
+import { getCourses, deleteCourse, updateCourse, } from "../services/courseService";
 // Import createCourse, updateCourse, deleteCourse when ready
 
+// console.log(createCourse, " : console to remove warnig")
 const DURATIONS = [1, 2, 3, 6];
 
 export default function Courses() {
