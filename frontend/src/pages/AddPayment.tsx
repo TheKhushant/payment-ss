@@ -5,257 +5,226 @@ import {
   getStudentPayments,
 } from "../services/paymentService";
 
-import {
-  getStudent,
-} from "../services/studentService";
+import { getStudent } from "../services/studentService";
 
 export default function AddPayment() {
   const { studentId } = useParams();
 
   const [student, setStudent] = useState<any>(null);
-    const [payments, setPayments] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
+  const [payments, setPayments] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
   const [amount, setAmount] = useState("");
   const [method, setMethod] = useState("Cash");
 
   useEffect(() => {
     loadData();
-    }, []);
+  }, []);
 
-    const loadData = async () => {
+  const loadData = async () => {
     try {
-        const studentData = await getStudent(studentId!);
+      const studentData = await getStudent(studentId!);
+      const paymentData = await getStudentPayments(studentId!);
 
-        const paymentData =
-        await getStudentPayments(studentId!);
-
-        setStudent(studentData);
-        setPayments(paymentData);
+      setStudent(studentData);
+      setPayments(paymentData);
     } catch (err) {
-        console.error(err);
+      console.error(err);
     } finally {
-        setLoading(false);
+      setLoading(false);
     }
-    };
+  };
 
   const handleSubmit = async () => {
+    if (!amount || Number(amount) <= 0) {
+      alert("Please enter a valid amount");
+      return;
+    }
+
     try {
       await createPayment({
         studentId,
         amount: Number(amount),
         method,
-        transactionId: `TXN-${Date.now()}`
+        transactionId: `TXN-${Date.now()}`,
       });
 
       alert("Payment Added Successfully");
-        await loadData();
-        setAmount("");
+      await loadData();
+      setAmount("");
     } catch (err) {
       console.error(err);
       alert("Failed to add payment");
     }
   };
-  const lastPayment =
-  payments.length > 0 ? payments[0] : null;
 
-    const totalPaid = payments.reduce(
-    (sum, p) => sum + Number(p.amount || 0),
-    0
-    );
+  const lastPayment = payments.length > 0 ? payments[0] : null;
 
-    const totalFee =
-    student?.courseFee ||
-    student?.courseId?.fee ||
-    0;
+  const totalPaid = payments.reduce((sum, p) => sum + Number(p.amount || 0), 0);
+  const totalFee = student?.courseFee || student?.courseId?.fee || 0;
+  const pendingAmount = totalFee - totalPaid;
 
-    const pendingAmount =
-    totalFee - totalPaid;
+  const upcomingInstallment = student?.installments?.find(
+    (i: any) => i.status !== "paid"
+  );
 
-    const upcomingInstallment =
-    student?.installments?.find(
-        (i: any) => i.status !== "paid"
-    );
-    if (loading) {
+  if (loading) {
     return (
-        <div className="p-6">
-        Loading...
-        </div>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-lg font-medium text-gray-600">Loading...</div>
+      </div>
     );
-    }
+  }
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-5">
-        Add Payment
-        </h1>
+    <div className="min-h-screen bg-gray-50 p-6">
+      <div className="max-w-5xl mx-auto">
+        {/* Header */}
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Add Payment</h1>
+            <p className="text-sm text-gray-600">Student Fee Management</p>
+          </div>
+          <div className="text-right">
+            <div className="text-xs text-gray-500">Student ID</div>
+            <div className="font-mono text-sm font-medium">{studentId}</div>
+          </div>
+        </div>
 
         {student && (
-        <div className="bg-white shadow rounded-xl p-5 mb-6">
+          <div className="bg-white shadow-xl rounded-2xl p-6 mb-6 border border-gray-100">
+            <h2 className="text-xl font-semibold text-gray-900 mb-5">Student Details</h2>
 
-            <h2 className="text-xl font-bold mb-4">
-            Student Details
-            </h2>
-
-            <div className="grid grid-cols-2 gap-3">
-
-            <p><strong>Name:</strong> {student.name}</p>
-
-            <p><strong>Mobile:</strong> {student.mobile}</p>
-
-            <p><strong>Email:</strong> {student.email}</p>
-
-            <p><strong>College:</strong> {student.college}</p>
-
-            <p>
-                <strong>Course:</strong>
-                {" "}
-                {student.courseId?.name}
-            </p>
-
-            <p>
-                <strong>Status:</strong>
-                {" "}
-                {student.status}
-            </p>
-
-            <p>
-                <strong>Total Fee:</strong>
-                ₹{totalFee}
-            </p>
-
-            <p>
-                <strong>Total Paid:</strong>
-                ₹{totalPaid}
-            </p>
-
-            <p className="text-red-600">
-                <strong>Pending:</strong>
-                ₹{pendingAmount}
-            </p>
-
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-x-8 gap-y-4 text-sm">
+              <div><span className="text-gray-500">Name:</span> <span className="font-medium">{student.name}</span></div>
+              <div><span className="text-gray-500">Mobile:</span> <span className="font-medium">{student.mobile}</span></div>
+              <div><span className="text-gray-500">Email:</span> <span className="font-medium">{student.email}</span></div>
+              <div><span className="text-gray-500">College:</span> <span className="font-medium">{student.college}</span></div>
+              <div><span className="text-gray-500">Course:</span> <span className="font-medium">{student.courseId?.name}</span></div>
+              <div>
+                <span className="text-gray-500">Status:</span>{" "}
+                <span className={`inline-flex px-3 py-0.5 rounded-full text-xs font-medium ${
+                  student.status === "active" ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"
+                }`}>
+                  {student.status}
+                </span>
+              </div>
             </div>
 
-            {lastPayment && (
-            <div className="mt-5 border-t pt-4">
-
-                <h3 className="font-semibold mb-2">
-                Last Payment
-                </h3>
-
-                <p>
-                Amount:
-                ₹{lastPayment.amount}
-                </p>
-
-                <p>
-                Method:
-                {lastPayment.method}
-                </p>
-
-                <p>
-                Date:
-                {new Date(
-                    lastPayment.date
-                ).toLocaleDateString()}
-                </p>
-
+            {/* Financial Summary */}
+            <div className="mt-8 grid grid-cols-3 gap-4">
+              <div className="bg-blue-50 border border-blue-100 rounded-xl p-4">
+                <div className="text-xs text-blue-600 font-medium">TOTAL FEE</div>
+                <div className="text-2xl font-bold text-gray-900 mt-1">₹{totalFee.toLocaleString()}</div>
+              </div>
+              <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-4">
+                <div className="text-xs text-emerald-600 font-medium">TOTAL PAID</div>
+                <div className="text-2xl font-bold text-gray-900 mt-1">₹{totalPaid.toLocaleString()}</div>
+              </div>
+              <div className="bg-red-50 border border-red-100 rounded-xl p-4">
+                <div className="text-xs text-red-600 font-medium">PENDING</div>
+                <div className="text-2xl font-bold text-gray-900 mt-1">₹{pendingAmount.toLocaleString()}</div>
+              </div>
             </div>
-            )}
 
-            {upcomingInstallment && (
-            <div className="mt-5 border-t pt-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-6 text-sm">
+              {lastPayment && (
+                <div className="bg-gray-50 rounded-xl p-4">
+                  <h3 className="font-medium mb-3 text-gray-800">Last Payment</h3>
+                  <div className="space-y-2">
+                    <div className="flex justify-between"><span className="text-gray-500">Amount</span> <span>₹{lastPayment.amount}</span></div>
+                    <div className="flex justify-between"><span className="text-gray-500">Method</span> <span>{lastPayment.method}</span></div>
+                    <div className="flex justify-between"><span className="text-gray-500">Date</span> 
+                      <span>{new Date(lastPayment.date).toLocaleDateString('en-IN')}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
 
-                <h3 className="font-semibold mb-2">
-                Upcoming Payment
-                </h3>
-
-                <p>
-                Amount:
-                ₹{upcomingInstallment.amount}
-                </p>
-
-                <p>
-                Status:
-                {upcomingInstallment.status}
-                </p>
-
+              {upcomingInstallment && (
+                <div className="bg-gray-50 rounded-xl p-4">
+                  <h3 className="font-medium mb-3 text-gray-800">Upcoming Installment</h3>
+                  <div className="space-y-2">
+                    <div className="flex justify-between"><span className="text-gray-500">Amount</span> <span>₹{upcomingInstallment.amount}</span></div>
+                    <div className="flex justify-between"><span className="text-gray-500">Status</span> 
+                      <span className="text-amber-600 font-medium">{upcomingInstallment.status}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
-            )}
-
-        </div>
+          </div>
         )}
 
+        {/* Payment History */}
         {payments.length > 0 && (
-            <div className="bg-white rounded-xl shadow p-5 mb-6">
-
-                <h3 className="font-bold mb-3">
-                Payment History
-                </h3>
-
-                <table className="w-full">
-
+          <div className="bg-white shadow-xl rounded-2xl p-6 mb-6 border border-gray-100">
+            <h3 className="text-xl font-semibold mb-4">Payment History</h3>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
                 <thead>
-                    <tr>
-                    <th>Date</th>
-                    <th>Amount</th>
-                    <th>Method</th>
-                    </tr>
+                  <tr className="border-b text-gray-600">
+                    <th className="py-3 text-left font-medium">Date</th>
+                    <th className="py-3 text-left font-medium">Amount</th>
+                    <th className="py-3 text-left font-medium">Method</th>
+                    <th className="py-3 text-left font-medium">Transaction ID</th>
+                  </tr>
                 </thead>
-
-                <tbody>
-
-                    {payments.map((payment: any) => (
-                    <tr key={payment._id}>
-
-                        <td>
-                        {new Date(
-                            payment.date
-                        ).toLocaleDateString()}
-                        </td>
-
-                        <td>
-                        ₹{payment.amount}
-                        </td>
-
-                        <td>
-                        {payment.method}
-                        </td>
-
+                <tbody className="divide-y">
+                  {payments.map((payment: any) => (
+                    <tr key={payment._id} className="hover:bg-gray-50">
+                      <td className="py-3">
+                        {new Date(payment.date).toLocaleDateString('en-IN')}
+                      </td>
+                      <td className="py-3 font-semibold text-emerald-700">₹{Number(payment.amount).toLocaleString()}</td>
+                      <td className="py-3">{payment.method}</td>
+                      <td className="py-3 font-mono text-gray-500 text-xs">{payment.transactionId}</td>
                     </tr>
-                    ))}
-
+                  ))}
                 </tbody>
-
-                </table>
-
+              </table>
             </div>
-            )}
+          </div>
+        )}
 
-      <input
-        type="number"
-        placeholder="Amount"
-        value={amount}
-        onChange={(e) => setAmount(e.target.value)}
-        className="border p-3 rounded w-full mb-4"
-      />
+        {/* Add Payment Form */}
+        <div className="bg-white shadow-xl rounded-2xl p-6 border border-gray-100">
+          <h3 className="text-xl font-semibold mb-6">Record New Payment</h3>
 
-      <select
-        value={method}
-        onChange={(e) => setMethod(e.target.value)}
-        className="border p-3 rounded w-full mb-4"
-      >
-        <option>Cash</option>
-        <option>UPI</option>
-        <option>Bank Transfer</option>
-      </select>
+          <div className="max-w-md space-y-5">
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1.5">PAYMENT AMOUNT (₹)</label>
+              <input
+                type="number"
+                placeholder="Enter amount"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                className="w-full border border-gray-300 focus:border-blue-500 rounded-xl px-4 py-3 text-lg font-medium"
+              />
+            </div>
 
-      <button
-        onClick={handleSubmit}
-        className="bg-green-600 text-white px-5 py-3 rounded"
-      >
-        Save Payment
-      </button>
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1.5">PAYMENT METHOD</label>
+              <select
+                value={method}
+                onChange={(e) => setMethod(e.target.value)}
+                className="w-full border border-gray-300 focus:border-blue-500 rounded-xl px-4 py-3 text-base"
+              >
+                <option value="Cash">Cash</option>
+                <option value="UPI">UPI</option>
+                <option value="Bank Transfer">Bank Transfer</option>
+              </select>
+            </div>
+
+            <button
+              onClick={handleSubmit}
+              className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-semibold py-4 rounded-xl text-lg shadow-md transition-all"
+            >
+              Save Payment
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

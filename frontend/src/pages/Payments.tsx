@@ -1,7 +1,10 @@
 import { useEffect, useState } from "react";
+import { Eye } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { getPayments, createPayment } from "../services/paymentService";
 
 export default function Payments() {
+  const navigate = useNavigate();
   const [payments, setPayments] = useState<any[]>([]);
   const [filteredPayments, setFilteredPayments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -314,7 +317,14 @@ export default function Payments() {
                       {payment.transactionId || "—"}
                     </td>
                     <td className="p-4 text-center">
-                      <button className="text-blue-600 hover:text-blue-700 font-medium">View</button>
+                      <button
+                        onClick={() =>
+                          navigate(`/payments/new/${payment.studentId?._id}`)
+                        }
+                        className="text-blue-600 hover:text-blue-700 flex items-center justify-center"
+                      >
+                        <Eye size={18} />
+                      </button>
                     </td>
                   </tr>
                 ))
