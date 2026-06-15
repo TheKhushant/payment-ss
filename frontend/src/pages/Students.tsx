@@ -1,7 +1,10 @@
-import { useEffect, useState } from "react";
 import { getStudents } from "../services/studentService";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function Students() {
+  const navigate = useNavigate();
+
   const [students, setStudents] = useState<any[]>([]);
   const [filteredStudents, setFilteredStudents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -41,18 +44,18 @@ export default function Students() {
         student.email?.toLowerCase().includes(term) ||
         student.mobile?.includes(term) ||
         student.college?.toLowerCase().includes(term) ||
-        student.course?.toLowerCase().includes(term)
+        student.courseId?.name?.toLowerCase().includes(term)
       );
     }
 
     // Course filter
     if (selectedCourse !== "All") {
-      result = result.filter((student) => student.course === selectedCourse);
+      result = result.filter((student) => student.courseId?.name === selectedCourse);
     }
 
     // Duration filter
     if (selectedDuration !== "All") {
-      result = result.filter((student) => student.duration === selectedDuration);
+      result = result.filter((student) => String(student.duration) === selectedDuration);
     }
 
     // Status filter
@@ -64,7 +67,7 @@ export default function Students() {
   }, [searchTerm, selectedCourse, selectedDuration, selectedStatus, students]);
 
   // Get unique courses for dropdown
-  const courses = ["All", ...new Set(students.map((s) => s.course).filter(Boolean))];
+  const courses = ["All", ...new Set(students.map((s) => s.courseId?.name).filter(Boolean))];
 
   return (
     <div className="p-6">
@@ -72,7 +75,7 @@ export default function Students() {
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Students</h1>
         <button
-          onClick={() => alert("Open Create New Student Modal / Page")}
+          onClick={() => navigate("/students/new")}
           className="px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-xl font-medium flex items-center gap-2 transition"
         >
           + Create New Student
@@ -187,7 +190,7 @@ export default function Students() {
                     <td className="p-4 text-gray-600">{student.email}</td>
                     <td className="p-4 text-gray-600">{student.mobile}</td>
                     <td className="p-4 text-gray-600">{student.college || "-"}</td>
-                    <td className="p-4 text-gray-600">{student.course || "-"}</td>
+                    <td className="p-4 text-gray-600">{student.courseId?.name || "-"}</td>
                     <td className="p-4 text-gray-600">{student.duration ? `${student.duration} Month` : "-"}</td>
                     <td className="p-4">
                       <span
@@ -203,7 +206,10 @@ export default function Students() {
                       </span>
                     </td>
                     <td className="p-4 text-center">
-                      <button className="text-blue-600 hover:text-blue-700 font-medium">
+                      <button
+                        onClick={() => navigate(`/students/${student._id}`)}
+                        className="text-blue-600 hover:text-blue-700 font-medium"
+                      >
                         View
                       </button>
                     </td>

@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { getCourses } from "../services/courseService";
+import { createStudent } from "../services/studentService";
 
 interface Installment {
   id: number;
@@ -8,16 +10,18 @@ interface Installment {
 }
 
 export default function CreateStudent() {
-  const [courses, setCourses] = useState<any[]>([]);
-  const [employees, setEmployees] = useState<string[]>(["Rahul Sharma", "Priya Singh", "Amit Kumar"]); // Example employees
+  const navigate = useNavigate();
 
-  // Form States
+  const [courses, setCourses] = useState<any[]>([]);
+  const [employees, setEmployees] = useState<string[]>(["Rahul Sharma", "Priya Singh", "Amit Kumar"]);
+
   const [formData, setFormData] = useState({
     name: "",
     mobile: "",
     email: "",
     college: "",
-    admissionDate: new Date().toISOString().split("T")[0], // Today's date
+    admissionDate: new Date().toISOString().split("T")[0],
+    courseId: "",
     course: "",
     duration: "",
     courseFee: 0,
@@ -31,47 +35,47 @@ export default function CreateStudent() {
   const [newEmployee, setNewEmployee] = useState("");
   const [showNewEmployeeInput, setShowNewEmployeeInput] = useState(false);
 
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
   useEffect(() => {
     loadCourses();
   }, []);
 
   const loadCourses = async () => {
-    const data = await getCourses();
-    setCourses(data || []);
+    try {
+      const data = await getCourses();
+      setCourses(data || []);
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   // Auto-calculate final fee
   useEffect(() => {
     const final = Math.max(0, formData.courseFee - formData.discount);
     setFormData(prev => ({ ...prev, finalFee: final }));
-
-    // Auto clear installments if fee changes significantly
-    if (formData.finalFee !== final && installments.length > 0) {
-      setInstallments([]);
-    }
   }, [formData.courseFee, formData.discount]);
 
   // Handle course selection
-  const handleCourseChange = (courseName: string) => {
-    const selectedCourse = courses.find(c => c.name === courseName);
+  const handleCourseChange = (courseId: string) => {
+    const selectedCourse = courses.find(c => c._id === courseId);
     if (selectedCourse) {
       setFormData(prev => ({
         ...prev,
-        course: courseName,
+        courseId,
+        course: selectedCourse.name,
         duration: selectedCourse.duration || "",
         courseFee: Number(selectedCourse.fee) || 0,
       }));
     } else {
-      setFormData(prev => ({ ...prev, course: courseName, duration: "", courseFee: 0 }));
+      setFormData(prev => ({ ...prev, courseId: "", course: "", duration: "", courseFee: 0 }));
     }
+    setInstallments([]);
   };
 
   const addInstallment = () => {
-    const newInst: Installment = {
-      id: nextInstallmentId,
-      amount: 0,
-      dueDate: "",
-    };
+    const newInst: Installment = { id: nextInstallmentId, amount: 0, dueDate: "" };
     setInstallments([...installments, newInst]);
     setNextInstallmentId(prev => prev + 1);
   };
@@ -94,23 +98,53 @@ export default function CreateStudent() {
     const evenAmount = Math.floor(formData.finalFee / installments.length);
     const updated = installments.map((inst, index) => ({
       ...inst,
-      amount: index === installments.length - 1 
-        ? formData.finalFee - evenAmount * (installments.length - 1) 
+      amount: index === installments.length - 1
+        ? formData.finalFee - evenAmount * (installments.length - 1)
         : evenAmount,
       dueDate: inst.dueDate || new Date(Date.now() + index * 30 * 86400000).toISOString().split("T")[0]
     }));
     setInstallments(updated);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.name || !formData.course) {
-      alert("Please fill required fields");
+    setError("");
+
+    if (!formData.name || !formData.mobile || !formData.courseId) {
+      setError("Name, mobile, and course are required.");
       return;
     }
-    console.log("Submitting Student:", { ...formData, installments });
-    alert("Student created successfully! (Connect to your API)");
-    // Call your createStudent service here
+
+    try {
+      setLoading(true);
+
+      const payload: any = {
+        name: formData.name,
+        mobile: formData.mobile,
+        email: formData.email || undefined,
+        college: formData.college || undefined,
+        admissionDate: formData.admissionDate,
+        courseId: formData.courseId,
+        duration: formData.duration ? Number(formData.duration) : undefined,
+        courseFee: formData.courseFee,
+        discount: formData.discount,
+        finalFee: formData.finalFee,
+        incentiveTo: formData.incentiveTo || undefined,
+        installments: installments.map(({ amount, dueDate }) => ({
+          amount,
+          dueDate,
+          status: "pending",
+        })),
+        status: "active",
+      };
+
+      await createStudent(payload);
+      navigate("/students");
+    } catch (err: any) {
+      setError(err.message || "Failed to create student");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const totalInstallment = installments.reduce((sum, i) => sum + Number(i.amount || 0), 0);
@@ -119,12 +153,16 @@ export default function CreateStudent() {
     <div className="p-6 max-w-7xl mx-auto">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold">Create New Student</h1>
-        <button
-          onClick={handleSubmit}
-          className="px-8 py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl font-semibold text-lg"
-        >
-          Save Student
-        </button>
+        <div className="flex items-center gap-3">
+          {error && <span className="text-red-600 text-sm">{error}</span>}
+          <button
+            onClick={handleSubmit}
+            disabled={loading}
+            className="px-8 py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl font-semibold text-lg disabled:opacity-60"
+          >
+            {loading ? "Saving..." : "Save Student"}
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -194,34 +232,40 @@ export default function CreateStudent() {
               <div>
                 <label className="block text-sm font-medium mb-2">Course <span className="text-red-500">*</span></label>
                 <select
-                  value={formData.course}
+                  value={formData.courseId}
                   onChange={(e) => handleCourseChange(e.target.value)}
                   className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-blue-500"
                 >
                   <option value="">Select Course</option>
                   {courses.map((c: any) => (
-                    <option key={c._id} value={c.name}>{c.name}</option>
+                    <option key={c._id} value={c._id}>{c.name}</option>
                   ))}
                 </select>
               </div>
-              <div>
-                <label className="block text-sm font-medium mb-2">Duration (Months)</label>
-                <input
-                  type="text"
-                  value={formData.duration}
-                  readOnly
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl bg-gray-50"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-2">Course Fee (₹)</label>
-                <input
-                  type="number"
-                  value={formData.courseFee}
-                  onChange={(e) => setFormData({ ...formData, courseFee: Number(e.target.value) })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-blue-500"
-                />
-              </div>
+           
+             <div>
+  <label className="block text-sm font-medium mb-2">Duration</label>
+  <select
+    value={formData.duration}
+    onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
+    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-blue-500"
+  >
+    <option value="">Select Duration</option>
+    <option value="1">1 Month</option>
+    <option value="2">2 Months</option>
+    <option value="3">3 Months</option>
+    <option value="6">6 Months</option>
+  </select>
+</div>
+<div>
+  <label className="block text-sm font-medium mb-2">Course Fee (₹)</label>
+  <input
+    type="number"
+    value={formData.courseFee}
+    onChange={(e) => setFormData({ ...formData, courseFee: Number(e.target.value) })}
+    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-blue-500"
+  />
+</div>
               <div>
                 <label className="block text-sm font-medium mb-2">Discount (₹)</label>
                 <input
@@ -245,6 +289,7 @@ export default function CreateStudent() {
                     ))}
                   </select>
                   <button
+                    type="button"
                     onClick={() => setShowNewEmployeeInput(true)}
                     className="px-4 py-3 border border-gray-300 rounded-xl hover:bg-gray-50"
                   >
@@ -261,6 +306,7 @@ export default function CreateStudent() {
                       className="flex-1 px-4 py-3 border border-gray-300 rounded-xl"
                     />
                     <button
+                      type="button"
                       onClick={() => {
                         if (newEmployee.trim()) {
                           setEmployees([...employees, newEmployee.trim()]);
@@ -294,12 +340,14 @@ export default function CreateStudent() {
               <h2 className="text-xl font-semibold">Installment Plan</h2>
               <div className="flex gap-3">
                 <button
+                  type="button"
                   onClick={splitEvenly}
                   className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm"
                 >
                   Split Evenly
                 </button>
                 <button
+                  type="button"
                   onClick={addInstallment}
                   className="px-5 py-2 bg-green-600 hover:bg-green-700 text-white rounded-xl text-sm"
                 >
@@ -331,6 +379,7 @@ export default function CreateStudent() {
                     />
                   </div>
                   <button
+                    type="button"
                     onClick={() => removeInstallment(inst.id)}
                     className="px-4 py-3 text-red-600 hover:bg-red-50 rounded-xl"
                   >
@@ -358,7 +407,7 @@ export default function CreateStudent() {
         <div className="lg:col-span-1">
           <div className="bg-white rounded-2xl shadow-sm border p-8 sticky top-6">
             <h3 className="font-semibold text-lg mb-6">Summary</h3>
-            
+
             <div className="space-y-6">
               <div>
                 <p className="text-gray-500 text-sm">Student</p>
