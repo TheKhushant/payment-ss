@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { getCourses } from "../services/courseService";
+import { getCourses, createCourse } from "../services/courseService";
 import { createStudent } from "../services/studentService";
 
 interface Installment {
@@ -9,9 +9,10 @@ interface Installment {
   dueDate: string;
 }
 
+
 export default function CreateStudent() {
   const navigate = useNavigate();
-
+  
   const [courses, setCourses] = useState<any[]>([]);
   const [employees, setEmployees] = useState<string[]>(["Rahul Sharma", "Priya Singh", "Amit Kumar"]);
 
@@ -28,12 +29,22 @@ export default function CreateStudent() {
     discount: 0,
     incentiveTo: "",
     finalFee: 0,
+    incentiveAmount: 0,
   });
 
   const [installments, setInstallments] = useState<Installment[]>([]);
   const [nextInstallmentId, setNextInstallmentId] = useState(1);
   const [newEmployee, setNewEmployee] = useState("");
+  const [showCourseModal, setShowCourseModal] = useState(false);
   const [showNewEmployeeInput, setShowNewEmployeeInput] = useState(false);
+
+  const [newCourse, setNewCourse] = useState({
+    name: "",
+    fee1: 0,
+    fee2: 0,
+    fee3: 0,
+    fee6: 0,
+  });
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -50,10 +61,15 @@ export default function CreateStudent() {
       console.error(err);
     }
   };
-
+  
   // Auto-calculate final fee
   useEffect(() => {
-    const final = Math.max(0, formData.courseFee - formData.discount);
+    const final = Math.max(
+      0,
+      formData.courseFee -
+        formData.discount -
+        formData.incentiveAmount
+    );
     setFormData(prev => ({ ...prev, finalFee: final }));
   }, [formData.courseFee, formData.discount]);
 
@@ -66,7 +82,10 @@ export default function CreateStudent() {
         courseId,
         course: selectedCourse.name,
         duration: selectedCourse.duration || "",
-        courseFee: Number(selectedCourse.fee) || 0,
+        courseFee:
+          selectedCourse.pricing?.[
+            selectedCourse.durations?.[0]?.toString()
+          ] || 0,
       }));
     } else {
       setFormData(prev => ({ ...prev, courseId: "", course: "", duration: "", courseFee: 0 }));
@@ -124,8 +143,13 @@ export default function CreateStudent() {
         email: formData.email || undefined,
         college: formData.college || undefined,
         admissionDate: formData.admissionDate,
-        courseId: formData.courseId,
-        duration: formData.duration ? Number(formData.duration) : undefined,
+        courseId:
+          formData.courseId.length === 24
+            ? formData.courseId
+            : undefined,
+        durationMonths: formData.duration
+        ? Number(formData.duration)
+        : undefined,
         courseFee: formData.courseFee,
         discount: formData.discount,
         finalFee: formData.finalFee,
@@ -133,7 +157,7 @@ export default function CreateStudent() {
         installments: installments.map(({ amount, dueDate }) => ({
           amount,
           dueDate,
-          status: "pending",
+          status: "upcoming",
         })),
         status: "active",
       };
@@ -241,13 +265,38 @@ export default function CreateStudent() {
                     <option key={c._id} value={c._id}>{c.name}</option>
                   ))}
                 </select>
+                <button
+                  type="button"
+                  onClick={() => setShowCourseModal(true)}
+                  className="mt-2 text-blue-600 text-sm"
+                >
+                  + Add New Course
+                </button>
               </div>
            
              <div>
-  <label className="block text-sm font-medium mb-2">Duration</label>
-  <select
-    value={formData.duration}
-    onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
+              <label className="block text-sm font-medium mb-2">Duration</label>
+              <select
+                value={formData.duration}
+                onChange={(e) => {
+                  const duration = e.target.value;
+
+                  const selectedCourse = courses.find(
+                    (c: any) => c._id === formData.courseId
+                  );
+
+                  let fee = formData.courseFee;
+
+                  if (selectedCourse) {
+                    fee = selectedCourse?.pricing?.[duration] || 0;
+                  }
+
+                  setFormData({
+                    ...formData,
+                    duration,
+                    courseFee: fee,
+                  });
+                }}
     className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-blue-500"
   >
     <option value="">Select Duration</option>
@@ -321,6 +370,21 @@ export default function CreateStudent() {
                     </button>
                   </div>
                 )}
+                <label className="block text-sm font-medium mb-2">
+                  Incentive Amount (₹)
+                </label>
+
+                <input
+                  type="number"
+                  value={formData.incentiveAmount}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      incentiveAmount: Number(e.target.value),
+                    })
+                  }
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl"
+                />
               </div>
               <div>
                 <label className="block text-sm font-medium mb-2">Final Fees (₹)</label>
@@ -434,6 +498,9 @@ export default function CreateStudent() {
                 <div>
                   <p className="text-gray-500 text-sm">Incentive To</p>
                   <p className="font-medium">{formData.incentiveTo}</p>
+                  <p className="text-sm text-red-600">
+                    Incentive: ₹{formData.incentiveAmount}
+                  </p>
                 </div>
               )}
 
@@ -456,6 +523,116 @@ export default function CreateStudent() {
           </div>
         </div>
       </div>
+      {showCourseModal && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <div className="bg-white p-6 rounded-xl w-[500px]">
+              <h2 className="text-xl font-semibold mb-4">
+                Add New Course
+              </h2>
+
+              <input
+                placeholder="Course Name"
+                className="w-full border p-3 mb-3 rounded"
+                onChange={(e) =>
+                  setNewCourse({
+                    ...newCourse,
+                    name: e.target.value,
+                  })
+                }
+              />
+
+              <input
+                placeholder="1 Month Fee"
+                type="number"
+                className="w-full border p-3 mb-3 rounded"
+                onChange={(e) =>
+                  setNewCourse({
+                    ...newCourse,
+                    fee1: Number(e.target.value),
+                  })
+                }
+              />
+
+              <input
+                placeholder="2 Month Fee"
+                type="number"
+                className="w-full border p-3 mb-3 rounded"
+                onChange={(e) =>
+                  setNewCourse({
+                    ...newCourse,
+                    fee2: Number(e.target.value),
+                  })
+                }
+              />
+
+              <input
+                placeholder="3 Month Fee"
+                type="number"
+                className="w-full border p-3 mb-3 rounded"
+                onChange={(e) =>
+                  setNewCourse({
+                    ...newCourse,
+                    fee3: Number(e.target.value),
+                  })
+                }
+              />
+
+              <input
+                placeholder="6 Month Fee"
+                type="number"
+                className="w-full border p-3 mb-3 rounded"
+                onChange={(e) =>
+                  setNewCourse({
+                    ...newCourse,
+                    fee6: Number(e.target.value),
+                  })
+                }
+              />
+
+              <div className="flex justify-end gap-2 mt-4">
+                <button
+                  onClick={() => setShowCourseModal(false)}
+                  className="px-4 py-2 border rounded"
+                >
+                  Cancel
+                </button>
+
+                <button
+                  onClick={async () => {
+                    try {
+                      const createdCourse = await createCourse({
+                        name: newCourse.name,
+                        pricing: {
+                          "1": newCourse.fee1,
+                          "2": newCourse.fee2,
+                          "3": newCourse.fee3,
+                          "6": newCourse.fee6,
+                        },
+                        durations: [1, 2, 3, 6],
+                      });
+
+                      setCourses([...courses, createdCourse]);
+
+                      setFormData(prev => ({
+                        ...prev,
+                        courseId: createdCourse._id,
+                        course: createdCourse.name,
+                      }));
+
+                      setShowCourseModal(false);
+                    } catch (err) {
+                      console.error(err);
+                      alert("Failed to create course");
+                    }
+                  }}
+                  className="px-4 py-2 bg-green-600 text-white rounded"
+                >
+                  Save
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
     </div>
   );
 }

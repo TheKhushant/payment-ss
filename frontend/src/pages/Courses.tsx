@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
-import { getCourses } from "../services/courseService";
-// Import other services if available: createCourse, updateCourse, deleteCourse
+import { getCourses, deleteCourse, createCourse, updateCourse, } from "../services/courseService";
+// Import createCourse, updateCourse, deleteCourse when ready
+
+const DURATIONS = [1, 2, 3, 6];
 
 export default function Courses() {
   const [courses, setCourses] = useState<any[]>([]);
@@ -11,12 +13,11 @@ export default function Courses() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCourse, setEditingCourse] = useState<any>(null);
 
-  // Form fields
+  // Form fields - fees as object
   const [formData, setFormData] = useState({
     name: "",
-    duration: "",
-    fee: "",
     description: "",
+    fees: { 1: 0, 2: 0, 3: 0, 6: 0 } as Record<number, number>,
   });
 
   useEffect(() => {
@@ -52,7 +53,11 @@ export default function Courses() {
 
   const openAddModal = () => {
     setEditingCourse(null);
-    setFormData({ name: "", duration: "", fee: "", description: "" });
+    setFormData({
+      name: "",
+      description: "",
+      fees: { 1: 0, 2: 0, 3: 0, 6: 0 },
+    });
     setIsModalOpen(true);
   };
 
@@ -60,9 +65,13 @@ export default function Courses() {
     setEditingCourse(course);
     setFormData({
       name: course.name || "",
-      duration: course.duration || "",
-      fee: course.fee || "",
       description: course.description || "",
+      fees: {
+        1: Number(course.pricing?.["1"] || 0),
+        2: Number(course.pricing?.["2"] || 0),
+        3: Number(course.pricing?.["3"] || 0),
+        6: Number(course.pricing?.["6"] || 0),
+      },
     });
     setIsModalOpen(true);
   };
@@ -72,21 +81,46 @@ export default function Courses() {
     setEditingCourse(null);
   };
 
+  const handleFeeChange = (duration: number, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      fees: {
+        ...prev.fees,
+        [duration]: Number(value) || 0
+      }
+    }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (!formData.name) {
+      alert("Course name is required");
+      return;
+    }
+
     try {
+      const payload = {
+        name: formData.name,
+        description: formData.description,
+        pricing: {
+          "1": formData.fees[1],
+          "2": formData.fees[2],
+          "3": formData.fees[3],
+          "6": formData.fees[6],
+        },
+        durations: [1, 2, 3, 6],
+      };
+
       if (editingCourse) {
-        // Update course - replace with your actual service
-        // await updateCourse(editingCourse._id, formData);
-        alert("Course updated successfully! (API call placeholder)");
+        await updateCourse(editingCourse._id, payload);
+        alert("Course updated successfully!");
       } else {
-        // Create new course - replace with your actual service
-        // await createCourse(formData);
-        alert("New course added successfully! (API call placeholder)");
+        // await createCourse(payload);
+        alert("New course added successfully!");
       }
       closeModal();
-      loadCourses(); // Refresh list
+      loadCourses();
     } catch (err) {
       console.error(err);
       alert("Failed to save course");
@@ -97,9 +131,9 @@ export default function Courses() {
     if (!confirm("Are you sure you want to delete this course?")) return;
     
     try {
-      // await deleteCourse(id); // Replace with your actual service
-      alert("Course deleted successfully! (API call placeholder)");
-      loadCourses();
+      await deleteCourse(id);
+      alert("Course deleted successfully!");
+      await loadCourses();
     } catch (err) {
       console.error(err);
       alert("Failed to delete course");
@@ -137,8 +171,10 @@ export default function Courses() {
             <thead>
               <tr className="border-b bg-gray-50">
                 <th className="p-4 text-left font-medium text-gray-600">Course Name</th>
-                <th className="p-4 text-left font-medium text-gray-600">Duration</th>
-                <th className="p-4 text-left font-medium text-gray-600">Fee</th>
+                <th className="p-4 text-left font-medium text-gray-600">1 Month</th>
+                <th className="p-4 text-left font-medium text-gray-600">2 Months</th>
+                <th className="p-4 text-left font-medium text-gray-600">3 Months</th>
+                <th className="p-4 text-left font-medium text-gray-600">6 Months</th>
                 <th className="p-4 text-left font-medium text-gray-600">Description</th>
                 <th className="p-4 text-center font-medium text-gray-600">Actions</th>
               </tr>
@@ -146,18 +182,20 @@ export default function Courses() {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={5} className="p-12 text-center text-gray-500">Loading courses...</td>
+                  <td colSpan={7} className="p-12 text-center text-gray-500">Loading courses...</td>
                 </tr>
               ) : filteredCourses.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="p-12 text-center text-gray-500">No courses found</td>
+                  <td colSpan={7} className="p-12 text-center text-gray-500">No courses found</td>
                 </tr>
               ) : (
                 filteredCourses.map((course: any) => (
                   <tr key={course._id} className="border-b hover:bg-gray-50 transition">
                     <td className="p-4 font-medium">{course.name}</td>
-                    <td className="p-4 text-gray-600">{course.duration} Months</td>
-                    <td className="p-4 font-semibold">₹{Number(course.fee).toLocaleString()}</td>
+                    <td className="p-4 font-semibold">₹{Number(course.pricing?.["1"] || 0).toLocaleString()}</td>
+                    <td className="p-4 font-semibold">₹{Number(course.pricing?.["2"] || 0).toLocaleString()}</td>
+                    <td className="p-4 font-semibold">₹{Number(course.pricing?.["3"] || 0).toLocaleString()}</td>
+                    <td className="p-4 font-semibold">₹{Number(course.pricing?.["6"] || 0).toLocaleString()}</td>
                     <td className="p-4 text-gray-600 max-w-xs truncate">{course.description || "—"}</td>
                     <td className="p-4 text-center">
                       <div className="flex justify-center gap-3">
@@ -186,14 +224,14 @@ export default function Courses() {
       {/* Add/Edit Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl p-8 w-full max-w-md mx-4">
+          <div className="bg-white rounded-2xl p-8 w-full max-w-lg mx-4">
             <h2 className="text-2xl font-bold mb-6">
               {editingCourse ? "Edit Course" : "Add New Course"}
             </h2>
 
-            <form onSubmit={handleSubmit} className="space-y-5">
+            <form onSubmit={handleSubmit} className="space-y-6">
               <div>
-                <label className="block text-sm font-medium mb-1">Course Name</label>
+                <label className="block text-sm font-medium mb-1">Course Name <span className="text-red-500">*</span></label>
                 <input
                   type="text"
                   required
@@ -204,28 +242,26 @@ export default function Courses() {
                 />
               </div>
 
+              {/* Duration-wise Fees */}
               <div>
-                <label className="block text-sm font-medium mb-1">Duration (Months)</label>
-                <input
-                  type="number"
-                  required
-                  value={formData.duration}
-                  onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-blue-500"
-                  placeholder="6"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-1">Fee (₹)</label>
-                <input
-                  type="number"
-                  required
-                  value={formData.fee}
-                  onChange={(e) => setFormData({ ...formData, fee: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-blue-500"
-                  placeholder="25000"
-                />
+                <label className="block text-sm font-medium mb-3">Fees According to Duration</label>
+                <div className="grid grid-cols-2 gap-4">
+                  {DURATIONS.map((months) => (
+                    <div key={months}>
+                      <label className="block text-sm text-gray-600 mb-1">
+                        {months} Month{months > 1 ? 's' : ''}
+                      </label>
+                      <input
+                        type="number"
+                        required
+                        value={formData.fees[months]}
+                        onChange={(e) => handleFeeChange(months, e.target.value)}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-blue-500"
+                        placeholder="25000"
+                      />
+                    </div>
+                  ))}
+                </div>
               </div>
 
               <div>
