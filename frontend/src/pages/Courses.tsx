@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getCourses, deleteCourse, updateCourse, } from "../services/courseService";
+import { getCourses, deleteCourse, createCourse, updateCourse, } from "../services/courseService";
 // Import createCourse, updateCourse, deleteCourse when ready
 
 // console.log(createCourse, " : console to remove warnig")
@@ -93,40 +93,41 @@ export default function Courses() {
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!formData.name) {
-      alert("Course name is required");
-      return;
+  e.preventDefault();
+
+  if (!formData.name) {
+    alert("Course name is required");
+    return;
+  }
+
+  try {
+    const payload = {
+      name: formData.name,
+      description: formData.description,
+      pricing: {
+        "1": formData.fees[1],
+        "2": formData.fees[2],
+        "3": formData.fees[3],
+        "6": formData.fees[6],
+      },
+      durations: [1, 2, 3, 6],
+    };
+
+    if (editingCourse) {
+      await updateCourse(editingCourse._id, payload);
+      alert("Course updated successfully!");
+    } else {
+      await createCourse(payload);
+      alert("New course added successfully!");
     }
 
-    try {
-      const payload = {
-        name: formData.name,
-        description: formData.description,
-        pricing: {
-          "1": formData.fees[1],
-          "2": formData.fees[2],
-          "3": formData.fees[3],
-          "6": formData.fees[6],
-        },
-        durations: [1, 2, 3, 6],
-      };
-
-      if (editingCourse) {
-        await updateCourse(editingCourse._id, payload);
-        alert("Course updated successfully!");
-      } else {
-        // await createCourse(payload);
-        alert("New course added successfully!");
-      }
-      closeModal();
-      loadCourses();
-    } catch (err) {
-      console.error(err);
-      alert("Failed to save course");
-    }
-  };
+    closeModal();
+    await loadCourses();
+  } catch (err) {
+    console.error(err);
+    alert("Failed to save course");
+  }
+};
 
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this course?")) return;
