@@ -12,6 +12,8 @@ export default function Sidebar() {
         <Link to="/students">Students</Link>
         <Link to="/payments">Payments</Link>
         <Link to="/courses">Courses</Link>
+        <Link to="/tracking">Track Payment</Link>
+        <Link to="/analytics">Analytics</Link>
       </nav>
     </div>
   );

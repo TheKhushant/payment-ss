@@ -10,7 +10,10 @@ import Dashboard from "./pages/Dashboard";
 import Students from "./pages/Students";
 import Payments from "./pages/Payments";
 import Courses from "./pages/Courses";
-import CreateStudent from "./pages/CreateStudent"
+// import CreateStudent from "./pages/CreateStudent"
+import CreateStudent from "./pages/CreateStudent";
+import Tracking from "./pages/Tracking";
+import Analytics from "./pages/Analytics";
 
 function App() {
   return (
@@ -21,7 +24,10 @@ function App() {
           <Route path="/students" element={<Students />} />
           <Route path="/payments" element={<Payments />} />
           <Route path="/courses" element={<Courses />} />
-          <Route path="/students/create" element={<CreateStudent/>}/>
+          {/* <Route path="/students/create" element={<CreateStudent/>}/> */}
+          <Route path="/tracking" element={<Tracking/>}/>
+          <Route path="/create-student" element={<CreateStudent/>}/>
+          <Route path="/analytics"  element={<Analytics />}/>
         </Route>
       </Routes>
     </BrowserRouter>
