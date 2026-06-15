@@ -1,6 +1,7 @@
 import { getStudents } from "../services/studentService";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import {IndianRupee} from "lucide-react"
 
 export default function Students() {
   const navigate = useNavigate();
@@ -81,12 +82,7 @@ export default function Students() {
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Students</h1>
-        <button
-          onClick={() => navigate("/students/new")}
-          className="px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-xl font-medium flex items-center gap-2 transition"
-        >
-          + Create New Student
-        </button>
+        
       </div>
 
       {/* Filters Bar */}
@@ -215,18 +211,12 @@ export default function Students() {
                     </td>
                     <td className="p-4 text-center ">
                       <button
-                        onClick={() => navigate(`/students/${student._id}`)}
-                        className="text-blue-600 hover:text-blue-700 font-medium"
-                      >
-                        View
-                      </button>
-                      <button
                         onClick={() =>
                           navigate(`/payments/new/${student._id}`)
                         }
                         className="text-blue-600 hover:text-blue-700 font-medium"
                       >
-                        Add Payment
+                        <IndianRupee />
                       </button>
                     </td>
                   </tr>

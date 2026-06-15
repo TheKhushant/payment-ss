@@ -14,7 +14,13 @@ export default function CreateStudent() {
   const navigate = useNavigate();
   
   const [courses, setCourses] = useState<any[]>([]);
-  const [employees, setEmployees] = useState<string[]>(["Rahul Sharma", "Priya Singh", "Amit Kumar"]);
+  const [employees] = useState<string[]>([
+    "Sankalp Singh",
+    "Tejas Khope",
+    "Khushant Wankhede",
+    "Yadnesh Umredkar",
+    "Flansh Gajbiye",
+  ]);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -37,6 +43,7 @@ export default function CreateStudent() {
   const [newEmployee, setNewEmployee] = useState("");
   const [showCourseModal, setShowCourseModal] = useState(false);
   const [showNewEmployeeInput, setShowNewEmployeeInput] = useState(false);
+  const [customIncentiveName, setCustomIncentiveName] = useState("");
 
   const [newCourse, setNewCourse] = useState({
     name: "",
@@ -71,7 +78,11 @@ export default function CreateStudent() {
         formData.incentiveAmount
     );
     setFormData(prev => ({ ...prev, finalFee: final }));
-  }, [formData.courseFee, formData.discount]);
+  }, [
+  formData.courseFee,
+  formData.discount,
+  formData.incentiveAmount,
+]);
 
   // Handle course selection
   const handleCourseChange = (courseId: string) => {
@@ -297,85 +308,98 @@ export default function CreateStudent() {
                     courseFee: fee,
                   });
                 }}
-    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-blue-500"
-  >
-    <option value="">Select Duration</option>
-    <option value="1">1 Month</option>
-    <option value="2">2 Months</option>
-    <option value="3">3 Months</option>
-    <option value="6">6 Months</option>
-  </select>
-</div>
-<div>
-  <label className="block text-sm font-medium mb-2">Course Fee (₹)</label>
-  <input
-    type="number"
-    value={formData.courseFee}
-    onChange={(e) => setFormData({ ...formData, courseFee: Number(e.target.value) })}
-    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-blue-500"
-  />
-</div>
-              <div>
-                <label className="block text-sm font-medium mb-2">Discount (₹)</label>
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-blue-500"
+              >
+                <option value="">Select Duration</option>
+                <option value="1">1 Month</option>
+                <option value="2">2 Months</option>
+                <option value="3">3 Months</option>
+                <option value="6">6 Months</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">Course Fee (₹)</label>
+              <input
+                type="number"
+                value={formData.courseFee}
+                onChange={(e) => setFormData({ ...formData, courseFee: Number(e.target.value) })}
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-blue-500"
+              />
+            </div>
+                          <div>
+                            <label className="block text-sm font-medium mb-2">Discount (₹)</label>
+                            <input
+                              type="number"
+                              value={formData.discount}
+                              onChange={(e) => setFormData({ ...formData, discount: Number(e.target.value) })}
+                              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-blue-500"
+                            />
+                          </div>
+                          <div>
+              <label className="block text-sm font-medium mb-2">
+                Incentive To
+              </label>
+
+              <select
+                value={
+                  employees.includes(formData.incentiveTo)
+                    ? formData.incentiveTo
+                    : "other"
+                }
+                onChange={(e) => {
+                  if (e.target.value === "other") {
+                    setShowNewEmployeeInput(true);
+                    setFormData({
+                      ...formData,
+                      incentiveTo: "",
+                    });
+                  } else {
+                    setShowNewEmployeeInput(false);
+                    setFormData({
+                      ...formData,
+                      incentiveTo: e.target.value,
+                    });
+                  }
+                }}
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-blue-500"
+              >
+                <option value="">Select Employee</option>
+
+                {employees.map((emp) => (
+                  <option key={emp} value={emp}>
+                    {emp}
+                  </option>
+                ))}
+
+                <option value="other">
+                  Other (Type Name)
+                </option>
+              </select>
+
+              {showNewEmployeeInput && (
                 <input
-                  type="number"
-                  value={formData.discount}
-                  onChange={(e) => setFormData({ ...formData, discount: Number(e.target.value) })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-blue-500"
+                  type="text"
+                  placeholder="Enter Employee Name"
+                  value={formData.incentiveTo}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      incentiveTo: e.target.value,
+                    })
+                  }
+                  className="w-full mt-3 px-4 py-3 border border-gray-300 rounded-xl"
                 />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-2">Incentive To</label>
-                <div className="flex gap-2">
-                  <select
-                    value={formData.incentiveTo}
-                    onChange={(e) => setFormData({ ...formData, incentiveTo: e.target.value })}
-                    className="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-blue-500"
-                  >
-                    <option value="">Select Employee</option>
-                    {employees.map(emp => (
-                      <option key={emp} value={emp}>{emp}</option>
-                    ))}
-                  </select>
-                  <button
-                    type="button"
-                    onClick={() => setShowNewEmployeeInput(true)}
-                    className="px-4 py-3 border border-gray-300 rounded-xl hover:bg-gray-50"
-                  >
-                    + Add
-                  </button>
-                </div>
-                {showNewEmployeeInput && (
-                  <div className="mt-2 flex gap-2">
-                    <input
-                      type="text"
-                      value={newEmployee}
-                      onChange={(e) => setNewEmployee(e.target.value)}
-                      placeholder="Employee name"
-                      className="flex-1 px-4 py-3 border border-gray-300 rounded-xl"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (newEmployee.trim()) {
-                          setEmployees([...employees, newEmployee.trim()]);
-                          setFormData({ ...formData, incentiveTo: newEmployee.trim() });
-                          setNewEmployee("");
-                          setShowNewEmployeeInput(false);
-                        }
-                      }}
-                      className="px-6 bg-green-600 text-white rounded-xl"
-                    >
-                      Add
-                    </button>
-                  </div>
-                )}
+              )}
+
+              {/* Incentive Amount */}
+              <div className="mt-4">
                 <label className="block text-sm font-medium mb-2">
                   Incentive Amount (₹)
                 </label>
 
                 <input
                   type="number"
+                  min="0"
                   value={formData.incentiveAmount}
                   onChange={(e) =>
                     setFormData({
@@ -383,9 +407,11 @@ export default function CreateStudent() {
                       incentiveAmount: Number(e.target.value),
                     })
                   }
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl"
+                  placeholder="Enter incentive amount"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-blue-500"
                 />
               </div>
+            </div>
               <div>
                 <label className="block text-sm font-medium mb-2">Final Fees (₹)</label>
                 <input
