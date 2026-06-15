@@ -66,3 +66,17 @@ export const deleteStudent = async (id: string) => {
   }
   return res.json();
 };
+
+export const getStudentById = async (id: string) => {
+  const res = await fetch(`${API_URL}/${id}`, {
+    headers: getAuthHeaders(),
+    credentials: "include",
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || "Failed to fetch student");
+  }
+
+  return res.json();
+};

@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 const installmentSchema = new mongoose.Schema({
   amount: Number,
-  dueDate: Date,
+  // dueDate: Date,
   status: { type: String, enum: ['upcoming', 'overdue', 'paid'], default: 'upcoming' },
   paidDate: Date
 });

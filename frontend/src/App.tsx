@@ -16,6 +16,7 @@ import Tracking from "./pages/Tracking";
 import Analytics from "./pages/Analytics";
 import RecordPaymentModal from "./pages/RecordPaymentModal";
 // import { useState } from "react";
+import AddPayment from "./pages/AddPayment";
 
 function App() {
   // const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
@@ -39,6 +40,10 @@ function App() {
                 onClose={() => window.history.back()}
               />
             }
+          />
+          <Route
+            path="/payments/new/:studentId"
+            element={<AddPayment />}
           />
         </Route>
       </Routes>

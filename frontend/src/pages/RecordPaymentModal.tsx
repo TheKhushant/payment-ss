@@ -11,7 +11,6 @@ interface RecordPaymentProps {
 export default function RecordPaymentModal({ isOpen, onClose, onSuccess }: RecordPaymentProps) {
   const [students, setStudents] = useState<any[]>([]);
   const [payments, setPayments] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
 
   const [formData, setFormData] = useState({
     studentId: "",
@@ -42,7 +41,6 @@ export default function RecordPaymentModal({ isOpen, onClose, onSuccess }: Recor
 
   const loadData = async () => {
     try {
-      setLoading(true);
       const [studentData, paymentData] = await Promise.all([
         getStudents(),
         getPayments()
@@ -51,8 +49,6 @@ export default function RecordPaymentModal({ isOpen, onClose, onSuccess }: Recor
       setPayments(paymentData || []);
     } catch (err) {
       console.error(err);
-    } finally {
-      setLoading(false);
     }
   };
 

@@ -159,6 +159,7 @@ export default function Students() {
         >
           Reset Filters
         </button>
+        
       </div>
 
       {/* Students Table */}
@@ -212,12 +213,20 @@ export default function Students() {
                         {student.status ? student.status.charAt(0).toUpperCase() + student.status.slice(1) : "Active"}
                       </span>
                     </td>
-                    <td className="p-4 text-center">
+                    <td className="p-4 text-center ">
                       <button
                         onClick={() => navigate(`/students/${student._id}`)}
                         className="text-blue-600 hover:text-blue-700 font-medium"
                       >
                         View
+                      </button>
+                      <button
+                        onClick={() =>
+                          navigate(`/payments/new/${student._id}`)
+                        }
+                        className="text-blue-600 hover:text-blue-700 font-medium"
+                      >
+                        Add Payment
                       </button>
                     </td>
                   </tr>

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getPayments } from "../services/paymentService";
+import { getPayments, createPayment } from "../services/paymentService";
 
 export default function Payments() {
   const [payments, setPayments] = useState<any[]>([]);
@@ -21,14 +21,47 @@ export default function Payments() {
     try {
       setLoading(true);
       const data = await getPayments();
-      setPayments(data || []);
-      setFilteredPayments(data || []);
+      setPayments(Array.isArray(data) ? data : []);
+      setFilteredPayments(Array.isArray(data) ? data : []);
     } catch (err) {
-      console.error(err);
+      console.error("Failed to load payments:", err);
+      setPayments([]);
+      setFilteredPayments([]);
     } finally {
       setLoading(false);
     }
   };
+
+  const handleAddPayment = async () => {
+  try {
+    const studentId = prompt("Enter Student ID");
+
+    if (!studentId) return;
+
+    const amount = Number(prompt("Enter Amount"));
+
+    if (!amount) return;
+
+    const method = prompt("Payment Method (Cash/UPI/Bank Transfer)") || "Cash";
+
+    const transactionId =
+      prompt("Transaction ID") || `TXN-${Date.now()}`;
+
+    await createPayment({
+      studentId,
+      amount,
+      method,
+      transactionId,
+    });
+
+    alert("Payment Added Successfully");
+
+    loadPayments(); // refresh table
+  } catch (error) {
+    console.error(error);
+    alert("Failed to add payment");
+  }
+};
 
   // Apply Filters
   useEffect(() => {
@@ -38,38 +71,45 @@ export default function Payments() {
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
       result = result.filter((payment) =>
-        payment.studentName?.toLowerCase().includes(term) ||
+        payment.studentId?.name?.toLowerCase().includes(term) ||
         payment.transactionId?.toLowerCase().includes(term) ||
-        payment.course?.toLowerCase().includes(term) ||
-        payment.studentEmail?.toLowerCase().includes(term)
+        payment.studentId?.email?.toLowerCase().includes(term) ||
+        payment.studentId?.courseId?.name?.toLowerCase().includes(term)
       );
     }
 
     // Course filter
     if (selectedCourse !== "All") {
-      result = result.filter((p) => p.course === selectedCourse);
+      result = result.filter((p) => (p.studentId?.courseId?.name || p.course) === selectedCourse);
     }
 
     // Duration filter
     if (selectedDuration !== "All") {
-      result = result.filter((p) => p.duration === selectedDuration);
+      result = result.filter((p) => String(p.studentId?.durationMonths || p.duration) === selectedDuration);
     }
 
     // Payment Method filter
     if (selectedMethod !== "All") {
-      result = result.filter((p) => p.paymentMethod === selectedMethod);
+      result = result.filter((p) => (p.method || "").toLowerCase() === selectedMethod.toLowerCase());
     }
 
     // Status filter
     if (selectedStatus !== "All") {
-      result = result.filter((p) => p.status === selectedStatus);
+      result = result.filter((p) => (p.status || "Paid").toLowerCase() === selectedStatus.toLowerCase());
     }
 
     setFilteredPayments(result);
   }, [searchTerm, selectedCourse, selectedDuration, selectedMethod, selectedStatus, payments]);
 
   // Get unique values for filters
-  const courses = ["All", ...new Set(payments.map((p) => p.course).filter(Boolean))];
+  const courses = [
+    "All",
+    ...new Set(
+      payments
+        .map((p) => p.studentId?.courseId?.name || p.course)
+        .filter(Boolean)
+    ),
+  ];
 
   // Export to CSV
   const exportToCSV = () => {
@@ -79,17 +119,17 @@ export default function Payments() {
     }
 
     const headers = ["Student Name", "Amount", "Date", "Method", "Course", "Duration", "Status", "Transaction ID"];
-    
+
     const csvContent = [
       headers.join(","),
       ...filteredPayments.map((p) => [
-        `"${p.studentName || ""}"`,
+        `"${p.studentId?.name || ""}"`,
         p.amount,
-        p.paymentDate ? new Date(p.paymentDate).toLocaleDateString() : "",
-        p.paymentMethod,
-        `"${p.course || ""}"`,
-        p.duration,
-        p.status,
+        p.date ? new Date(p.date).toLocaleDateString() : "",
+        p.method || "",
+        `"${p.studentId?.courseId?.name || p.course || ""}"`,
+        p.studentId?.durationMonths || p.duration || "",
+        p.status || "Paid",
         `"${p.transactionId || ""}"`
       ].join(","))
     ].join("\n");
@@ -115,7 +155,7 @@ export default function Payments() {
             📥 Export CSV
           </button>
           <button
-            onClick={() => alert("Open Add Payment Modal / Form")}
+            onClick={handleAddPayment}
             className="px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-xl font-medium flex items-center gap-2 transition"
           >
             + Add Payment
@@ -176,9 +216,9 @@ export default function Payments() {
             className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-blue-500"
           >
             <option value="All">All Methods</option>
-            <option value="cash">Cash</option>
-            <option value="upi">UPI</option>
-            <option value="bank">Bank Transfer</option>
+            <option value="Cash">Cash</option>
+            <option value="UPI">UPI</option>
+            <option value="Bank Transfer">Bank Transfer</option>
           </select>
         </div>
 
@@ -191,9 +231,9 @@ export default function Payments() {
             className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-blue-500"
           >
             <option value="All">All Status</option>
-            <option value="paid">Paid</option>
-            <option value="pending">Pending</option>
-            <option value="failed">Failed</option>
+            <option value="Paid">Paid</option>
+            <option value="Pending">Pending</option>
+            <option value="Failed">Failed</option>
           </select>
         </div>
 
@@ -240,28 +280,39 @@ export default function Payments() {
               ) : (
                 filteredPayments.map((payment: any, idx: number) => (
                   <tr key={payment._id || idx} className="border-b hover:bg-gray-50 transition">
-                    <td className="p-4 font-medium">{payment.studentName || "—"}</td>
-                    <td className="p-4 font-semibold text-green-600">₹{Number(payment.amount).toLocaleString()}</td>
+                    <td className="p-4 font-medium">
+                      {payment.studentId?.name || "—"}
+                    </td>
+
+                    <td className="p-4 font-semibold text-green-600">
+                      ₹{Number(payment.amount || 0).toLocaleString()}
+                    </td>
+
                     <td className="p-4 text-gray-600">
-                      {payment.paymentDate ? new Date(payment.paymentDate).toLocaleDateString() : "—"}
+                      {payment.date
+                        ? new Date(payment.date).toLocaleDateString()
+                        : "—"}
                     </td>
-                    <td className="p-4 capitalize font-medium">{payment.paymentMethod || "—"}</td>
-                    <td className="p-4 text-gray-600">{payment.course || "—"}</td>
-                    <td className="p-4 text-gray-600">{payment.duration ? `${payment.duration} Month` : "—"}</td>
-                    <td className="p-4">
-                      <span
-                        className={`px-3 py-1 rounded-full text-xs font-medium ${
-                          payment.status === "paid"
-                            ? "bg-green-100 text-green-700"
-                            : payment.status === "pending"
-                            ? "bg-orange-100 text-orange-700"
-                            : "bg-red-100 text-red-700"
-                        }`}
-                      >
-                        {payment.status ? payment.status.toUpperCase() : "PAID"}
-                      </span>
+
+                    <td className="p-4 capitalize font-medium">
+                      {payment.method || "—"}
                     </td>
-                    <td className="p-4 text-gray-500 font-mono text-sm">{payment.transactionId || "—"}</td>
+
+                    <td className="p-4 text-gray-700">
+                      {payment.studentId?.courseId?.name || payment.course || "—"}
+                    </td>
+
+                    <td className="p-4 text-gray-700">
+                      {payment.studentId?.durationMonths || payment.duration || "—"}
+                    </td>
+
+                    <td className="p-4 text-gray-700 capitalize">
+                      {payment.status || "Paid"}
+                    </td>
+
+                    <td className="p-4 text-gray-500 font-mono text-sm">
+                      {payment.transactionId || "—"}
+                    </td>
                     <td className="p-4 text-center">
                       <button className="text-blue-600 hover:text-blue-700 font-medium">View</button>
                     </td>

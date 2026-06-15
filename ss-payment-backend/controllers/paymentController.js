@@ -5,7 +5,13 @@ const Student = require('../models/Student');
 exports.getPayments = async (req, res) => {
   try {
     const payments = await Payment.find()
-      .populate('studentId', 'name mobile')
+      .populate({
+        path: "studentId",
+        populate: {
+          path: "courseId",
+          select: "name"
+        }
+      })
       .sort({ date: -1 });
     res.json(payments);
   } catch (err) {
@@ -15,6 +21,7 @@ exports.getPayments = async (req, res) => {
 
 // Create new payment (and update installment status)
 exports.createPayment = async (req, res) => {
+  console.log("Payment Request:", req.body);
   try {
     const { studentId, amount, method, transactionId, notes } = req.body;
 
@@ -32,25 +39,28 @@ exports.createPayment = async (req, res) => {
     if (student) {
       let remaining = amount;
 
-      for (let installment of student.installments) {
-        if (remaining <= 0) break;
-        if (installment.status === 'paid') continue;
+      if (student?.installments?.length) {
+        for (let installment of student.installments) {
+          if (remaining <= 0) break;
+          if (installment.status === 'paid') continue;
 
-        if (installment.amount <= remaining) {
-          installment.status = 'paid';
-          installment.paidDate = new Date();
-          remaining -= installment.amount;
-        } else {
-          // Partial payment
-          installment.amount -= remaining; // reduce remaining amount
-          remaining = 0;
+          if (installment.amount <= remaining) {
+            installment.status = 'paid';
+            installment.paidDate = new Date();
+            remaining -= installment.amount;
+          } else {
+            // Partial payment
+            installment.amount -= remaining; // reduce remaining amount
+            remaining = 0;
+          }
         }
+        await student.save();
       }
-      await student.save();
     }
 
     res.status(201).json(payment);
   } catch (err) {
+    console.error(err);
     res.status(500).json({ message: err.message });
   }
 };

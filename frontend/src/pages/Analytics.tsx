@@ -10,7 +10,6 @@ import {
 export default function Analytics() {
   const [payments, setPayments] = useState<any[]>([]);
   const [courses, setCourses] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     loadData();
@@ -18,7 +17,6 @@ export default function Analytics() {
 
   const loadData = async () => {
     try {
-      setLoading(true);
       const [paymentData, courseData] = await Promise.all([
         getPayments(),
         getCourses()
@@ -27,8 +25,6 @@ export default function Analytics() {
       setCourses(courseData || []);
     } catch (err) {
       console.error(err);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -203,9 +199,9 @@ export default function Analytics() {
                 innerRadius={80}
                 outerRadius={120}
                 dataKey="pending"
-                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                label={({ name, percent }) => `${name} ${((percent ?? 0) * 100).toFixed(0)}%`}
               >
-                {pendingByCourseData.map((entry, index) => (
+                {pendingByCourseData.map((_, index) => (
                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                 ))}
               </Pie>
