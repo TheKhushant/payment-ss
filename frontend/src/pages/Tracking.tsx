@@ -1,55 +1,112 @@
 import { useEffect, useState } from "react";
-import { getPayments } from "../services/paymentService";
-// You can also import getStudents if needed for full student details
+import { getStudents } from "../services/studentService";
 
 export default function Tracking() {
-  const [payments, setPayments] = useState<any[]>([]);
+  const [trackingData, setTrackingData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [selectedPayment, setSelectedPayment] = useState<any>(null);
   const [showStudentModal, setShowStudentModal] = useState(false);
 
   useEffect(() => {
-    loadPayments();
+    loadData();
   }, []);
 
-  const loadPayments = async () => {
+  const loadData = async () => {
+    const students = await getStudents();
+    console.log("STUDENTS API DATA:", students);
     try {
       setLoading(true);
-      const data = await getPayments();
-      setPayments(data || []);
+      const students = await getStudents();
+
+      const rows: any[] = [];
+
+      students.forEach((student: any) => {
+        if (!student.installments || !Array.isArray(student.installments)) return;
+
+        student.installments.forEach((installment: any) => {
+          // Skip paid installments
+          if (installment.status === "paid" || installment.status === "Paid") return;
+          console.log("INSTALLMENT", installment);
+          rows.push({
+            _id: installment._id || `${student._id}-${installment.dueDate}`,
+            studentId: student._id,
+            studentName: student.name,
+            studentEmail: student.email,
+            studentMobile: student.mobile,
+            college: student.college,
+            course: student.courseId?.name || student.course || "—",
+            amount: installment.amount,
+            dueDate: installment.dueDate,
+            status: installment.status || "pending",
+            fullStudent: student, // For full details
+            installmentId: installment._id,
+          });
+        });
+      });
+
+      // Sort by dueDate
+      // rows.sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime());
+      rows.sort((a, b) => {
+        const aDate = a.dueDate
+          ? new Date(a.dueDate).getTime()
+          : Number.MAX_SAFE_INTEGER;
+
+        const bDate = b.dueDate
+          ? new Date(b.dueDate).getTime()
+          : Number.MAX_SAFE_INTEGER;
+
+        return aDate - bDate;
+      });
+      console.log("TRACKING ROWS", rows);
+      setTrackingData(rows);
     } catch (err) {
-      console.error(err);
-    } finally {
+      console.error("Error loading tracking data:", err);
+    } finally { 
       setLoading(false);
     }
   };
 
-  // Upcoming Payments (Next 7 days)
-  const upcomingPayments = payments.filter((p: any) => {
-    if (!p.dueDate || p.status === "paid") return false;
-    const due = new Date(p.dueDate);
-    const now = new Date();
-    const diffTime = due.getTime() - now.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 3600 * 24));
-    return diffDays > 0 && diffDays <= 7;
-  });
+  // Upcoming Payments (Next 7 days) - Sorted by due date
+  const upcomingPayments = trackingData
+    .filter((p: any) => {
+      if (!p.dueDate) return false;
+      const due = new Date(p.dueDate);
+      const now = new Date();
+      now.setHours(0, 0, 0, 0); // Normalize time
+      due.setHours(0, 0, 0, 0);
 
-  const upcomingTotal = upcomingPayments.reduce(
+      const diffTime = due.getTime() - now.getTime();
+      const diffDays = Math.ceil(diffTime / (1000 * 3600 * 24));
+      
+      return diffDays >= 0 && diffDays <= 60;
+    })
+    .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime());
+
+    const upcomingTotal = upcomingPayments.reduce(
     (sum: number, p: any) => sum + Number(p.amount || 0),
     0
   );
 
-  // Overdue Payments
-  const overduePayments = payments.filter((p: any) => {
-    if (!p.dueDate || p.status === "paid") return false;
-    return new Date(p.dueDate) < new Date();
-  });
+  // Overdue Payments - Sorted by due date (oldest first)
+  const overduePayments = trackingData
+    .filter((p: any) => {
+      if (!p.dueDate) return false;
+      const due = new Date(p.dueDate);
+      const now = new Date();
+      now.setHours(0, 0, 0, 0);
+      due.setHours(0, 0, 0, 0);
+      return due < now;
+    })
+    .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime());
 
   const openStudentInfo = (payment: any) => {
     setSelectedPayment(payment);
     setShowStudentModal(true);
   };
+
+  console.log("UPCOMING", upcomingPayments);
+  console.log("OVERDUE", overduePayments);
 
   return (
     <div className="p-6">
@@ -57,10 +114,10 @@ export default function Tracking() {
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold">Payment Tracking</h1>
         <button
-          onClick={loadPayments}
-          className="px-4 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg"
+          onClick={loadData}
+          className="px-5 py-2 bg-gray-100 hover:bg-gray-200 rounded-xl text-sm font-medium transition"
         >
-          Refresh
+          🔄 Refresh
         </button>
       </div>
 
@@ -80,27 +137,29 @@ export default function Tracking() {
 
           <div className="space-y-4 max-h-[calc(100vh-280px)] overflow-auto pr-2">
             {loading ? (
-              <p className="text-center py-10 text-gray-500">Loading...</p>
+              <p className="text-center py-12 text-gray-500">Loading upcoming payments...</p>
             ) : upcomingPayments.length === 0 ? (
-              <p className="text-center py-10 text-gray-500">No upcoming payments in next 7 days</p>
+              <p className="text-center py-12 text-gray-500">No upcoming payments in next 7 days 🎉</p>
             ) : (
-              upcomingPayments.map((payment: any, idx: number) => (
+              upcomingPayments.map((payment: any) => (
                 <div
-                  key={payment._id || idx}
+                  key={payment._id}
                   className="flex justify-between items-center bg-gray-50 p-5 rounded-xl hover:bg-gray-100 transition"
                 >
                   <div className="flex-1">
-                    <p className="font-semibold">{payment.studentName || "Student"}</p>
-                    <p className="text-sm text-gray-500">
-                      Due: {new Date(payment.dueDate).toLocaleDateString()} 
-                      • {payment.course}
+                    <p className="font-semibold text-lg">{payment.studentName}</p>
+                    <p className="text-sm text-gray-600">
+                      {payment.course} • {payment.college && `(${payment.college})`}
+                    </p>
+                    <p className="text-sm text-gray-500 mt-1">
+                      Due: <span className="font-medium">{new Date(payment.dueDate).toLocaleDateString('en-IN')}</span>
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="text-xl font-bold text-emerald-600">₹{Number(payment.amount).toLocaleString()}</p>
+                    <p className="text-2xl font-bold text-emerald-600">₹{Number(payment.amount).toLocaleString()}</p>
                     <button
                       onClick={() => openStudentInfo(payment)}
-                      className="text-blue-600 hover:text-blue-700 text-sm mt-1"
+                      className="text-blue-600 hover:text-blue-700 text-sm mt-2 font-medium"
                     >
                       View Student →
                     </button>
@@ -120,27 +179,29 @@ export default function Tracking() {
 
           <div className="space-y-4 max-h-[calc(100vh-280px)] overflow-auto pr-2">
             {loading ? (
-              <p className="text-center py-10 text-gray-500">Loading...</p>
+              <p className="text-center py-12 text-gray-500">Loading overdue payments...</p>
             ) : overduePayments.length === 0 ? (
-              <p className="text-center py-10 text-gray-500">No overdue payments 🎉</p>
+              <p className="text-center py-12 text-gray-500">No overdue payments 🎉 Great Job!</p>
             ) : (
-              overduePayments.map((payment: any, idx: number) => (
+              overduePayments.map((payment: any) => (
                 <div
-                  key={payment._id || idx}
+                  key={payment._id}
                   className="flex justify-between items-center bg-red-50 p-5 rounded-xl hover:bg-red-100 transition border border-red-100"
                 >
                   <div className="flex-1">
-                    <p className="font-semibold">{payment.studentName || "Student"}</p>
-                    <p className="text-sm text-red-600">
-                      Due: {new Date(payment.dueDate).toLocaleDateString()} 
-                      • {payment.course}
+                    <p className="font-semibold text-lg">{payment.studentName}</p>
+                    <p className="text-sm text-gray-600">
+                      {payment.course} • {payment.college && `(${payment.college})`}
+                    </p>
+                    <p className="text-sm text-red-600 mt-1">
+                      Due: <span className="font-medium">{new Date(payment.dueDate).toLocaleDateString('en-IN')}</span>
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="text-xl font-bold text-red-600">₹{Number(payment.amount).toLocaleString()}</p>
+                    <p className="text-2xl font-bold text-red-600">₹{Number(payment.amount).toLocaleString()}</p>
                     <button
                       onClick={() => openStudentInfo(payment)}
-                      className="text-blue-600 hover:text-blue-700 text-sm mt-1"
+                      className="text-blue-600 hover:text-blue-700 text-sm mt-2 font-medium"
                     >
                       View Student →
                     </button>
@@ -194,7 +255,7 @@ export default function Tracking() {
                   </div>
                   <div className="flex justify-between">
                     <span>Due Date</span>
-                    <span>{new Date(selectedPayment.dueDate).toLocaleDateString()}</span>
+                    <span>{new Date(selectedPayment.dueDate).toLocaleDateString('en-IN')}</span>
                   </div>
                 </div>
               </div>
@@ -208,7 +269,7 @@ export default function Tracking() {
                 Close
               </button>
               <button
-                onClick={() => alert("Navigate to full student profile / edit page")}
+                onClick={() => window.location.href = `/students/${selectedPayment.studentId}`}
                 className="flex-1 py-3 bg-blue-600 text-white rounded-2xl font-medium hover:bg-blue-700"
               >
                 Full Profile

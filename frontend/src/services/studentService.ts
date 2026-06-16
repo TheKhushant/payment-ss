@@ -8,14 +8,14 @@ const getAuthHeaders = () => {
   };
 };
 
-export const getStudents = async () => {
-  const res = await fetch(API_URL, { headers: getAuthHeaders(), credentials: "include" });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.message || "Failed to fetch students");
-  }
-  return res.json();
-};
+// export const getStudents = async () => {
+//   const res = await fetch(API_URL, { headers: getAuthHeaders(), credentials: "include" });
+//   if (!res.ok) {
+//     const err = await res.json().catch(() => ({}));
+//     throw new Error(err.message || "Failed to fetch students");
+//   }
+//   return res.json();
+// };
 
 export const createStudent = async (data: any) => {
   const res = await fetch(API_URL, {
@@ -76,6 +76,19 @@ export const getStudentById = async (id: string) => {
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
     throw new Error(err.message || "Failed to fetch student");
+  }
+
+  return res.json();
+};
+
+export const getStudents = async () => {
+  const res = await fetch(API_URL, {
+    headers: getAuthHeaders(),
+    credentials: "include",
+  });
+
+  if (!res.ok) {
+    throw new Error("Failed to fetch students");
   }
 
   return res.json();
