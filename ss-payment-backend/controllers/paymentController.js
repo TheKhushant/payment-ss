@@ -77,3 +77,21 @@ exports.getStudentPayments = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
+
+exports.getPayments = async (req, res) => {
+  try {
+    const payments = await Payment.find()
+      .populate({
+        path: "studentId",
+        populate: {
+          path: "courseId",
+          select: "name"
+        }
+      })
+      .sort({ date: -1 });
+
+    res.json(payments);
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
+};

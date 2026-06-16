@@ -98,7 +98,21 @@ export default function Payments() {
 
     // Status filter
     if (selectedStatus !== "All") {
-      result = result.filter((p) => (p.status || "Paid").toLowerCase() === selectedStatus.toLowerCase());
+      result = result.filter((p) => {
+        const upcomingInstallment =
+          p.studentId?.installments?.find(
+            (i: any) => i.status !== "paid"
+          );
+
+        const status = upcomingInstallment
+          ? "Unpaid"
+          : "Paid";
+
+        return (
+          status.toLowerCase() ===
+          selectedStatus.toLowerCase()
+        );
+      });
     }
 
     setFilteredPayments(result);
@@ -235,8 +249,7 @@ export default function Payments() {
           >
             <option value="All">All Status</option>
             <option value="Paid">Paid</option>
-            <option value="Pending">Pending</option>
-            <option value="Failed">Failed</option>
+            <option value="Unpaid">Unpaid</option>
           </select>
         </div>
 
@@ -261,12 +274,22 @@ export default function Payments() {
             <thead>
               <tr className="border-b bg-gray-50">
                 <th className="p-4 text-left font-medium text-gray-600">Student Name</th>
-                <th className="p-4 text-left font-medium text-gray-600">Amount</th>
+                <th className="p-4 text-left font-medium text-gray-600">Paid Amount</th>
                 <th className="p-4 text-left font-medium text-gray-600">Payment Date</th>
-                <th className="p-4 text-left font-medium text-gray-600">Method</th>
+                {/* <th className="p-4 text-left font-medium text-gray-600">Method</th> */}
                 <th className="p-4 text-left font-medium text-gray-600">Course</th>
                 <th className="p-4 text-left font-medium text-gray-600">Duration</th>
-                <th className="p-4 text-left font-medium text-gray-600">Status</th>
+                <th className="p-4 text-left font-medium text-gray-600">
+                  Installment Status
+                </th>
+
+                <th className="p-4 text-left font-medium text-gray-600">
+                  Unpaid Amount
+                </th>
+
+                <th className="p-4 text-left font-medium text-gray-600">
+                  Due Date
+                </th>
                 <th className="p-4 text-left font-medium text-gray-600">Transaction ID</th>
                 <th className="p-4 text-center font-medium text-gray-600">Actions</th>
               </tr>
@@ -274,11 +297,11 @@ export default function Payments() {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={9} className="p-12 text-center text-gray-500">Loading payments...</td>
+                  <td colSpan={11} className="p-12 text-center text-gray-500">Loading payments...</td>
                 </tr>
               ) : filteredPayments.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="p-12 text-center text-gray-500">No payments found</td>
+                  <td colSpan={11} className="p-12 text-center text-gray-500">No payments found</td>
                 </tr>
               ) : (
                 filteredPayments.map((payment: any, idx: number) => (
@@ -297,9 +320,9 @@ export default function Payments() {
                         : "—"}
                     </td>
 
-                    <td className="p-4 capitalize font-medium">
+                    {/* <td className="p-4 capitalize font-medium">
                       {payment.method || "—"}
-                    </td>
+                    </td> */}
 
                     <td className="p-4 text-gray-700">
                       {payment.studentId?.courseId?.name || payment.course || "—"}
@@ -309,8 +332,53 @@ export default function Payments() {
                       {payment.studentId?.durationMonths || payment.duration || "—"}
                     </td>
 
-                    <td className="p-4 text-gray-700 capitalize">
-                      {payment.status || "Paid"}
+                    <td className="p-4">
+                      {(() => {
+                        const upcomingInstallment =
+                          payment.studentId?.installments?.find(
+                            (i: any) => i.status !== "paid"
+                          );
+
+                        return upcomingInstallment ? (
+                          <span className="px-6 py-1 rounded-full bg-red-100 text-red-700 font-medium">
+                            Unpaid
+                          </span>
+                        ) : (
+                          <span className="px-6 py-1 rounded-full bg-green-100 text-green-700 font-medium">
+                            Paid
+                          </span>
+                        );
+                      })()}
+                    </td>
+
+                    <td className="p-4 font-medium text-red-600">
+                      {(() => {
+                        const unpaidTotal =
+                          payment.studentId?.installments
+                            ?.filter((i: any) => i.status !== "paid")
+                            ?.reduce(
+                              (sum: number, i: any) =>
+                                sum + Number(i.amount || 0),
+                              0
+                            ) || 0;
+
+                        return `₹${unpaidTotal.toLocaleString()}`;
+                      })()}
+                    </td>
+
+                    <td className="p-4 text-gray-600">
+                      {(() => {
+                        const upcomingInstallment =
+                          payment.studentId?.installments?.find(
+                            (i: any) => i.status !== "paid"
+                          );
+
+                        return upcomingInstallment?.dueDate
+                          ? new Date(
+                              upcomingInstallment.dueDate
+                            ).toLocaleDateString("en-IN")
+                          : "-";
+                      })()}
                     </td>
 
                     <td className="p-4 text-gray-500 font-mono text-sm">
