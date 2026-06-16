@@ -10,7 +10,9 @@ export default function Dashboard() {
   const [courses, setCourses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  console.log(courses, loading);
+  const [trackingData, setTrackingData] = useState<any[]>([]); // Pending installments
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     loadData();
@@ -24,9 +26,43 @@ export default function Dashboard() {
         getPayments(),
         getCourses(),
       ]);
+
       setStudents(studentData || []);
       setPayments(paymentData || []);
       setCourses(courseData || []);
+
+      // Build tracking data (same logic as Tracking page)
+      const rows: any[] = [];
+
+      studentData.forEach((student: any) => {
+        if (!student.installments || !Array.isArray(student.installments)) return;
+
+        student.installments.forEach((installment: any) => {
+          if (installment.status === "paid" || installment.status === "Paid") return;
+
+          rows.push({
+            _id: installment._id || `${student._id}-${installment.dueDate}`,
+            studentId: student._id,
+            studentName: student.name,
+            studentEmail: student.email,
+            studentMobile: student.mobile,
+            college: student.college,
+            course: student.courseId?.name || student.course || "—",
+            amount: installment.amount,
+            dueDate: installment.dueDate,
+            status: installment.status || "pending",
+          });
+        });
+      });
+
+      // Sort by due date
+      rows.sort((a, b) => {
+        const aDate = a.dueDate ? new Date(a.dueDate).getTime() : Number.MAX_SAFE_INTEGER;
+        const bDate = b.dueDate ? new Date(b.dueDate).getTime() : Number.MAX_SAFE_INTEGER;
+        return aDate - bDate;
+      });
+
+      setTrackingData(rows);
     } catch (err) {
       console.error(err);
     } finally {
@@ -34,13 +70,12 @@ export default function Dashboard() {
     }
   };
 
-  // Calculations
+  // Calculations using trackingData (installments)
   const totalStudents = students.length;
-  const activeStudents = students.filter((s: any) => s.status === "active" || !s.status).length; // adjust filter as per your data
+  const activeStudents = students.filter((s: any) => s.status === "active" || !s.status).length;
 
   const totalRevenue = payments.reduce(
-    (sum: number, payment: any) => sum + Number(payment.amount || 0),
-    0
+    (sum: number, p: any) => sum + Number(p.amount || 0), 0
   );
 
   const today = new Date().toISOString().split("T")[0];
@@ -48,39 +83,53 @@ export default function Dashboard() {
     .filter((p: any) => p.paymentDate?.split("T")[0] === today)
     .reduce((sum: number, p: any) => sum + Number(p.amount || 0), 0);
 
-  const currentMonth = new Date().toISOString().slice(0, 7); // YYYY-MM
+  const currentMonth = new Date().toISOString().slice(0, 7);
   const monthlyCollection = payments
     .filter((p: any) => p.paymentDate?.startsWith(currentMonth))
     .reduce((sum: number, p: any) => sum + Number(p.amount || 0), 0);
 
-  const pendingAmount = payments
-    .filter((p: any) => p.status === "pending" || !p.status)
-    .reduce((sum: number, p: any) => sum + Number(p.amount || 0), 0);
+  // Pending Amount (from installments)
+  const pendingAmount = trackingData.reduce(
+    (sum: number, p: any) => sum + Number(p.amount || 0), 0
+  );
 
-  const upcomingPayments = payments.filter((p: any) => {
+  // Upcoming Payments (Next 7 Days)
+  const upcomingPayments = trackingData
+    .filter((p: any) => {
+      if (!p.dueDate) return false;
+      const due = new Date(p.dueDate);
+      const now = new Date();
+      now.setHours(0, 0, 0, 0);
+      due.setHours(0, 0, 0, 0);
+      const diffDays = Math.ceil((due.getTime() - now.getTime()) / (1000 * 3600 * 24));
+      return diffDays >= 0 && diffDays <= 7;
+    })
+    .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime());
+
+  // Overdue Payments
+  const overduePayments = trackingData
+    .filter((p: any) => {
+      if (!p.dueDate) return false;
+      const due = new Date(p.dueDate);
+      const now = new Date();
+      now.setHours(0, 0, 0, 0);
+      due.setHours(0, 0, 0, 0);
+      return due < now;
+    })
+    .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime());
+
+  // Today's Pending Payments
+  const todaysPendingPayments = trackingData.filter((p: any) => {
     if (!p.dueDate) return false;
-    const due = new Date(p.dueDate);
-    const now = new Date();
-    const diffTime = due.getTime() - now.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 3600 * 24));
-    return diffDays > 0 && diffDays <= 7;
+    return p.dueDate.split("T")[0] === today;
   });
 
-  const overduePayments = payments.filter((p: any) => {
-    if (!p.dueDate || p.status === "paid") return false;
-    return new Date(p.dueDate) < new Date();
-  });
-
-  const todaysPendingPayments = payments.filter((p: any) => {
-    if (!p.dueDate) return false;
-    return p.dueDate.split("T")[0] === today && (p.status === "pending" || !p.status);
-  });
-
+  // Recent Payments (from payments collection)
   const recentPayments = [...payments]
-    .sort((a: any, b: any) => new Date(b.paymentDate || b.createdAt).getTime() - new Date(a.paymentDate || a.createdAt).getTime())
+    .sort((a: any, b: any) => 
+      new Date(b.paymentDate || b.createdAt).getTime() - new Date(a.paymentDate || a.createdAt).getTime()
+    )
     .slice(0, 10);
-
-  const navigate = useNavigate();
 
   return (
     <div className="p-6">
@@ -116,9 +165,8 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Metrics Grid - 4 columns, 2 rows */}
+      {/* Metrics Grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-10">
-        {/* Row 1 */}
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
           <p className="text-gray-500 text-sm">Total Students</p>
           <h2 className="text-4xl font-bold mt-2">{totalStudents}</h2>
@@ -139,7 +187,6 @@ export default function Dashboard() {
           <h2 className="text-4xl font-bold mt-2 text-emerald-600">₹{todaysCollections.toLocaleString()}</h2>
         </div>
 
-        {/* Row 2 */}
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
           <p className="text-gray-500 text-sm">Monthly Collection</p>
           <h2 className="text-4xl font-bold mt-2">₹{monthlyCollection.toLocaleString()}</h2>
@@ -170,15 +217,15 @@ export default function Dashboard() {
             <p className="text-gray-500 py-8 text-center">No pending payments today</p>
           ) : (
             <div className="space-y-3 max-h-96 overflow-auto">
-              {todaysPendingPayments.map((payment: any, idx: number) => (
-                <div key={idx} className="flex justify-between items-center p-3 bg-gray-50 rounded-xl">
+              {todaysPendingPayments.map((payment: any) => (
+                <div key={payment._id} className="flex justify-between items-center p-3 bg-gray-50 rounded-xl">
                   <div>
-                    <p className="font-medium">{payment.studentName || "Student"}</p>
+                    <p className="font-medium">{payment.studentName}</p>
                     <p className="text-sm text-gray-500">Due today</p>
                   </div>
                   <div className="text-right">
                     <p className="font-semibold text-orange-600">₹{payment.amount}</p>
-                    <p className="text-xs text-gray-500">{payment.courseName}</p>
+                    <p className="text-xs text-gray-500">{payment.course}</p>
                   </div>
                 </div>
               ))}
@@ -193,12 +240,12 @@ export default function Dashboard() {
             <p className="text-gray-500 py-8 text-center">No upcoming payments</p>
           ) : (
             <div className="space-y-3 max-h-96 overflow-auto">
-              {upcomingPayments.map((payment: any, idx: number) => (
-                <div key={idx} className="flex justify-between items-center p-3 bg-gray-50 rounded-xl">
+              {upcomingPayments.map((payment: any) => (
+                <div key={payment._id} className="flex justify-between items-center p-3 bg-gray-50 rounded-xl">
                   <div>
-                    <p className="font-medium">{payment.studentName || "Student"}</p>
+                    <p className="font-medium">{payment.studentName}</p>
                     <p className="text-sm text-gray-500">
-                      Due: {new Date(payment.dueDate).toLocaleDateString()}
+                      Due: {new Date(payment.dueDate).toLocaleDateString('en-IN')}
                     </p>
                   </div>
                   <div className="text-right">
@@ -222,7 +269,7 @@ export default function Dashboard() {
                   <div>
                     <p className="font-medium">{payment.studentName || "Student"}</p>
                     <p className="text-sm text-gray-500">
-                      {new Date(payment.paymentDate || payment.createdAt).toLocaleDateString()}
+                      {new Date(payment.paymentDate || payment.createdAt).toLocaleDateString('en-IN')}
                     </p>
                   </div>
                   <div className="text-right">
