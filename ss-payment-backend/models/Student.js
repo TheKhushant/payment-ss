@@ -24,6 +24,25 @@ const noteSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now }
 });
 
+// controllers/studentController.js
+
+exports.deleteAllStudents = async (req, res) => {
+  try {
+    const result = await Student.deleteMany({});
+
+    res.status(200).json({
+      success: true,
+      message: `${result.deletedCount} students deleted successfully`,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to delete students",
+      error: error.message,
+    });
+  }
+};
+
 const studentSchema = new mongoose.Schema({
   name: { type: String, required: true },
   mobile: { type: String, required: true },

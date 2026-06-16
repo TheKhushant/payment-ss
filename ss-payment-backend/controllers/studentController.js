@@ -63,3 +63,21 @@ exports.addNote = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+
+exports.deleteAllStudents = async (req, res) => {
+  try {
+    const result = await Student.deleteMany({});
+
+    res.status(200).json({
+      success: true,
+      message: `${result.deletedCount} students deleted successfully`,
+    });
+  } catch (error) {
+    console.error("DELETE ALL ERROR:", error);
+
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};

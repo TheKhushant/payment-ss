@@ -1,4 +1,5 @@
 const API_URL = "http://localhost:5000/api/students";
+import axios from "axios";
 
 const getAuthHeaders = () => {
   const token = localStorage.getItem("token");
@@ -92,4 +93,14 @@ export const getStudents = async () => {
   }
 
   return res.json();
+};
+
+
+
+export const deleteAllStudents = async () => {
+  const response = await axios.delete(
+    "http://localhost:5000/api/students/delete-all"
+  );
+
+  return response.data;
 };

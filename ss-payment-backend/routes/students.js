@@ -8,6 +8,7 @@ const {
   createStudent,
   updateStudent,
   deleteStudent,
+  deleteAllStudents,
   addNote
 } = require('../controllers/studentController');
 
@@ -16,7 +17,9 @@ router.get('/', protect, getStudents);
 router.get('/:id', protect, getStudent);
 router.post('/', protect, createStudent);
 router.put('/:id', protect, updateStudent);
-router.delete('/:id', protect, deleteStudent);
 router.post('/:id/notes', protect, addNote);
+router.delete("/delete-all", deleteAllStudents);
+// Then this
+router.delete("/:id", deleteStudent);
 
 module.exports = router;

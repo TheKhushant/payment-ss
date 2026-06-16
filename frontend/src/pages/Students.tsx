@@ -1,4 +1,4 @@
-import { getStudents } from "../services/studentService";
+import { deleteAllStudents, getStudents } from "../services/studentService";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {IndianRupee} from "lucide-react"
@@ -77,12 +77,39 @@ export default function Students() {
   // Get unique courses for dropdown
   const courses = ["All", ...new Set(students.map((s) => s.courseId?.name).filter(Boolean))];
 
+  const handleDeleteAll = async () => {
+    const confirmed = window.confirm(
+      "⚠️ Are you sure?\n\nThis will permanently delete ALL students."
+    );
+
+    if (!confirmed) return;
+
+    try {
+      await deleteAllStudents();
+
+      alert("All students deleted successfully.");
+
+      setStudents([]);
+      setFilteredStudents([]);
+    } catch (error) {
+      console.error(error);
+      alert("Failed to delete students.");
+    }
+  };
+
   return (
     <div className="p-6">
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Students</h1>
-        
+
+        <button
+          disabled
+          onClick={handleDeleteAll}
+          className="bg-red-600 text-white px-5 py-2 rounded-lg font-medium cursor-not-allowed opacity-50"
+        >
+          Delete All Students
+        </button>
       </div>
 
       {/* Filters Bar */}
