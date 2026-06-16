@@ -39,11 +39,43 @@ export default function CreateStudent() {
   });
 
   const [installments, setInstallments] = useState<Installment[]>([]);
-  const [nextInstallmentId, setNextInstallmentId] = useState(1);
-  const [newEmployee, setNewEmployee] = useState("");
+    useEffect(() => {
+  if (!formData.finalFee) return;
+
+  const isSpecialCourse =
+    formData.course?.toLowerCase().includes("servicenow") ||
+    formData.course?.toLowerCase().includes("service now") ||
+    formData.course?.toLowerCase().includes("databricks");
+
+  const gapDays = isSpecialCourse ? 42 : 30;
+
+  const firstDueDate =
+    installments[0]?.dueDate ||
+    new Date().toISOString().split("T")[0];
+
+  const firstAmount = installments[0]?.amount || 0;
+
+  const secondDate = new Date(firstDueDate);
+  secondDate.setDate(secondDate.getDate() + gapDays);
+
+  setInstallments([
+    {
+      id: 1,
+      amount: firstAmount,
+      dueDate: firstDueDate,
+    },
+    {
+      id: 2,
+      amount: formData.finalFee - firstAmount,
+      dueDate: secondDate.toISOString().split("T")[0],
+    },
+  ]);
+}, [formData.finalFee, formData.course]);
+  
+  // const [newEmployee, setNewEmployee] = useState("");
   const [showCourseModal, setShowCourseModal] = useState(false);
   const [showNewEmployeeInput, setShowNewEmployeeInput] = useState(false);
-  const [customIncentiveName, setCustomIncentiveName] = useState("");
+  // const [customIncentiveName, setCustomIncentiveName] = useState("");
 
   const [newCourse, setNewCourse] = useState({
     name: "",
@@ -88,51 +120,75 @@ export default function CreateStudent() {
   const handleCourseChange = (courseId: string) => {
     const selectedCourse = courses.find(c => c._id === courseId);
     if (selectedCourse) {
+      const pricing = selectedCourse.pricing || {};
+
+      const autoDuration =
+        Object.keys(pricing).find(
+          key => Number(pricing[key]) > 0
+        ) || "";
+
       setFormData(prev => ({
         ...prev,
         courseId,
         course: selectedCourse.name,
-        duration: selectedCourse.duration || "",
-        courseFee:
-          selectedCourse.pricing?.[
-            selectedCourse.durations?.[0]?.toString()
-          ] || 0,
+        duration: autoDuration,
+        courseFee: pricing[autoDuration] || 0,
       }));
     } else {
       setFormData(prev => ({ ...prev, courseId: "", course: "", duration: "", courseFee: 0 }));
     }
-    setInstallments([]);
+    
   };
 
-  const addInstallment = () => {
-    const newInst: Installment = { id: nextInstallmentId, amount: 0, dueDate: "" };
-    setInstallments([...installments, newInst]);
-    setNextInstallmentId(prev => prev + 1);
-  };
 
-  const removeInstallment = (id: number) => {
-    setInstallments(installments.filter(i => i.id !== id));
-  };
+  const updateInstallment = (
+    id: number,
+    field: keyof Installment,
+    value: any
+  ) => {
+    const updated = [...installments];
 
-  const updateInstallment = (id: number, field: keyof Installment, value: any) => {
-    setInstallments(installments.map(inst =>
-      inst.id === id ? { ...inst, [field]: value } : inst
-    ));
-  };
+    const index = updated.findIndex(
+      (i) => i.id === id
+    );
 
-  const splitEvenly = () => {
-    if (formData.finalFee <= 0 || installments.length === 0) {
-      alert("Please add at least one installment and set final fee");
-      return;
+    if (index === -1) return;
+
+    updated[index] = {
+      ...updated[index],
+      [field]: value,
+    };
+
+    if (id === 1) {
+      const firstAmount =
+        field === "amount"
+          ? Number(value)
+          : updated[0].amount;
+
+      updated[1].amount =
+        formData.finalFee - firstAmount;
+
+      const firstDate =
+        field === "dueDate"
+          ? value
+          : updated[0].dueDate;
+
+      const isSpecialCourse =
+        formData.course?.toLowerCase().includes("servicenow") ||
+        formData.course?.toLowerCase().includes("service now") ||
+        formData.course?.toLowerCase().includes("databricks");
+
+      const gapDays = isSpecialCourse ? 42 : 30;
+
+      const nextDate = new Date(firstDate);
+      nextDate.setDate(
+        nextDate.getDate() + gapDays
+      );
+
+      updated[1].dueDate =
+        nextDate.toISOString().split("T")[0];
     }
-    const evenAmount = Math.floor(formData.finalFee / installments.length);
-    const updated = installments.map((inst, index) => ({
-      ...inst,
-      amount: index === installments.length - 1
-        ? formData.finalFee - evenAmount * (installments.length - 1)
-        : evenAmount,
-      dueDate: inst.dueDate || new Date(Date.now() + index * 30 * 86400000).toISOString().split("T")[0]
-    }));
+
     setInstallments(updated);
   };
 
@@ -429,20 +485,7 @@ export default function CreateStudent() {
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-semibold">Installment Plan</h2>
               <div className="flex gap-3">
-                <button
-                  type="button"
-                  onClick={splitEvenly}
-                  className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm"
-                >
-                  Split Evenly
-                </button>
-                <button
-                  type="button"
-                  onClick={addInstallment}
-                  className="px-5 py-2 bg-green-600 hover:bg-green-700 text-white rounded-xl text-sm"
-                >
-                  + Add Installment
-                </button>
+                
               </div>
             </div>
 
@@ -455,8 +498,19 @@ export default function CreateStudent() {
                     <input
                       type="number"
                       value={inst.amount}
-                      onChange={(e) => updateInstallment(inst.id, "amount", Number(e.target.value))}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-xl"
+                      readOnly={index === 1}
+                      onChange={(e) =>
+                        updateInstallment(
+                          inst.id,
+                          "amount",
+                          Number(e.target.value)
+                        )
+                      }
+                      className={`w-full px-4 py-3 border rounded-xl ${
+                        index === 1
+                          ? "bg-gray-100"
+                          : ""
+                      }`}
                     />
                   </div>
                   <div className="flex-1">
@@ -464,17 +518,22 @@ export default function CreateStudent() {
                     <input
                       type="date"
                       value={inst.dueDate}
-                      onChange={(e) => updateInstallment(inst.id, "dueDate", e.target.value)}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-xl"
+                      readOnly={index === 1}
+                      onChange={(e) =>
+                        updateInstallment(
+                          inst.id,
+                          "dueDate",
+                          e.target.value
+                        )
+                      }
+                      className={`w-full px-4 py-3 border rounded-xl ${
+                        index === 1
+                          ? "bg-gray-100"
+                          : ""
+                      }`}
                     />
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => removeInstallment(inst.id)}
-                    className="px-4 py-3 text-red-600 hover:bg-red-50 rounded-xl"
-                  >
-                    Clear
-                  </button>
+                  
                 </div>
               ))}
               {installments.length === 0 && (
@@ -488,6 +547,17 @@ export default function CreateStudent() {
                 {totalInstallment !== formData.finalFee && (
                   <p className="text-red-600 text-sm mt-1">Note: Does not match Final Fee</p>
                 )}
+              </div>
+            )}
+            {installments.length === 2 && (
+              <div className="mt-4 p-3 bg-blue-50 rounded-xl text-sm">
+                Gap Between Installments:
+                <span className="font-semibold ml-2">
+                  {formData.course?.toLowerCase().includes("service now") ||
+                  formData.course?.toLowerCase().includes("databricks")
+                    ? "42 Days"
+                    : "30 Days"}
+                </span>
               </div>
             )}
           </div>
