@@ -40,37 +40,39 @@ export default function CreateStudent() {
 
   const [installments, setInstallments] = useState<Installment[]>([]);
     useEffect(() => {
-  if (!formData.finalFee) return;
+      if (!formData.finalFee) return;
 
-  const isSpecialCourse =
-    formData.course?.toLowerCase().includes("servicenow") ||
-    formData.course?.toLowerCase().includes("service now") ||
-    formData.course?.toLowerCase().includes("databricks");
+      const isSpecialCourse =
+        formData.course?.toLowerCase().includes("servicenow") ||
+        formData.course?.toLowerCase().includes("service now") ||
+        formData.course?.toLowerCase().includes("databricks");
 
-  const gapDays = isSpecialCourse ? 42 : 30;
+      const gapDays = isSpecialCourse ? 42 : 30;
 
-  const firstDueDate =
-    installments[0]?.dueDate ||
-    new Date().toISOString().split("T")[0];
+      const firstAmount = installments[0]?.amount || 0;
 
-  const firstAmount = installments[0]?.amount || 0;
+      const firstDueDate = formData.admissionDate;
 
-  const secondDate = new Date(firstDueDate);
-  secondDate.setDate(secondDate.getDate() + gapDays);
+      const secondDate = new Date(firstDueDate);
+      secondDate.setDate(secondDate.getDate() + gapDays);
 
-  setInstallments([
-    {
-      id: 1,
-      amount: firstAmount,
-      dueDate: firstDueDate,
-    },
-    {
-      id: 2,
-      amount: formData.finalFee - firstAmount,
-      dueDate: secondDate.toISOString().split("T")[0],
-    },
-  ]);
-}, [formData.finalFee, formData.course]);
+      setInstallments([
+        {
+          id: 1,
+          amount: firstAmount,
+          dueDate: firstDueDate,
+        },
+        {
+          id: 2,
+          amount: formData.finalFee - firstAmount,
+          dueDate: secondDate.toISOString().split("T")[0],
+        },
+      ]);
+    }, [
+      formData.finalFee,
+      formData.course,
+      formData.admissionDate,
+    ]);
   
   // const [newEmployee, setNewEmployee] = useState("");
   const [showCourseModal, setShowCourseModal] = useState(false);
@@ -498,7 +500,7 @@ export default function CreateStudent() {
                     <input
                       type="number"
                       value={inst.amount}
-                      readOnly={index === 1}
+                      readOnly={false}
                       onChange={(e) =>
                         updateInstallment(
                           inst.id,
@@ -518,7 +520,7 @@ export default function CreateStudent() {
                     <input
                       type="date"
                       value={inst.dueDate}
-                      readOnly={index === 1}
+                      readOnly={false}
                       onChange={(e) =>
                         updateInstallment(
                           inst.id,
