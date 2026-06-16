@@ -5,6 +5,7 @@ import {
   getStudentPayments,
 } from "../services/paymentService";
 
+
 import { getStudent } from "../services/studentService";
 
 export default function AddPayment() {
@@ -16,13 +17,18 @@ export default function AddPayment() {
 
   const [amount, setAmount] = useState("");
   const [method, setMethod] = useState("Cash");
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     loadData();
   }, []);
 
   const loadData = async () => {
+    if (isLoading) return;
+
     try {
+      setIsLoading(true);
+
       const studentData = await getStudent(studentId!);
       const paymentData = await getStudentPayments(studentId!);
 
@@ -32,6 +38,7 @@ export default function AddPayment() {
       console.error(err);
     } finally {
       setLoading(false);
+      setIsLoading(false); // ✅ Add this
     }
   };
 
@@ -218,9 +225,20 @@ export default function AddPayment() {
 
             <button
               onClick={handleSubmit}
-              className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-semibold py-4 rounded-xl text-lg shadow-md transition-all"
+              disabled={isLoading}
+              className={`
+                flex items-center justify-center gap-2
+                px-4 py-2 rounded text-white
+                ${isLoading
+                  ? "bg-gray-400 cursor-not-allowed"
+                  : "bg-green-600 hover:bg-green-700"}
+              `}
             >
-              Save Payment
+              {isLoading && (
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              )}
+
+              {isLoading ? "Saving..." : "Save Payment"}
             </button>
           </div>
         </div>

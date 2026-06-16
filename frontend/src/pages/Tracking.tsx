@@ -127,7 +127,7 @@ export default function Tracking() {
           <div className="flex justify-between items-start mb-6">
             <div>
               <h2 className="text-2xl font-semibold text-emerald-700">Upcoming Payments</h2>
-              <p className="text-sm text-gray-500">Next 7 Days</p>
+              <p className="text-sm text-gray-500">ALL Upcoming Payments </p>
             </div>
             <div className="text-right">
               <p className="text-sm text-gray-500">Total Due</p>
