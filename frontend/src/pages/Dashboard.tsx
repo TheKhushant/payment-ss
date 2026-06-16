@@ -61,7 +61,9 @@ export default function Dashboard() {
         const bDate = b.dueDate ? new Date(b.dueDate).getTime() : Number.MAX_SAFE_INTEGER;
         return aDate - bDate;
       });
+      // const paymentData = await getPayments();
 
+      console.log("student data : " ,paymentData);
       setTrackingData(rows);
     } catch (err) {
       console.error(err);
@@ -267,7 +269,7 @@ export default function Dashboard() {
               {recentPayments.map((payment: any, idx: number) => (
                 <div key={idx} className="flex justify-between items-center p-3 bg-gray-50 rounded-xl">
                   <div>
-                    <p className="font-medium">{payment.studentName || "Student"}</p>
+                    <p className="font-medium">{ payment.studentId?.name || payment.studentName || "Student"}</p>
                     <p className="text-sm text-gray-500">
                       {new Date(payment.paymentDate || payment.createdAt).toLocaleDateString('en-IN')}
                     </p>

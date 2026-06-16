@@ -34,6 +34,8 @@ exports.createPayment = async (req, res) => {
       notes
     });
 
+    // console.log(req.body);
+
     // Find student and update installments
     const student = await Student.findById(studentId);
     if (student) {
