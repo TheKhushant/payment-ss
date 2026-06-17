@@ -353,16 +353,29 @@ export default function Payments() {
 
                     <td className="p-4 font-medium text-red-600">
                       {(() => {
-                        const unpaidTotal =
-                          payment.studentId?.installments
-                            ?.filter((i: any) => i.status !== "paid")
-                            ?.reduce(
-                              (sum: number, i: any) =>
-                                sum + Number(i.amount || 0),
-                              0
-                            ) || 0;
 
-                        return `₹${unpaidTotal.toLocaleString()}`;
+                        const totalFee =
+                          Number(payment.studentId?.courseFee || 0) -
+                          Number(payment.studentId?.discount || 0) -
+                          Number(payment.studentId?.scholarship || 0);
+
+                        const totalPaid = payments
+                          .filter(
+                            (p) =>
+                              p.studentId?._id ===
+                              payment.studentId?._id
+                          )
+                          .reduce(
+                            (sum, p) =>
+                              sum + Number(p.amount || 0),
+                            0
+                          );
+
+                        const unpaidAmount =
+                          Math.max(0, totalFee - totalPaid);
+
+                        return `₹${unpaidAmount.toLocaleString()}`;
+
                       })()}
                     </td>
 

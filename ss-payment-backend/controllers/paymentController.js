@@ -1,23 +1,6 @@
 const Payment = require('../models/Payment');
 const Student = require('../models/Student');
 
-// Get all payments
-exports.getPayments = async (req, res) => {
-  try {
-    const payments = await Payment.find()
-      .populate({
-        path: "studentId",
-        populate: {
-          path: "courseId",
-          select: "name"
-        }
-      })
-      .sort({ date: -1 });
-    res.json(payments);
-  } catch (err) {
-    res.status(500).json({ message: 'Server error' });
-  }
-};
 
 // Create new payment (and update installment status)
 exports.createPayment = async (req, res) => {
@@ -39,31 +22,68 @@ exports.createPayment = async (req, res) => {
 
     // Find student and update installments
     const student = await Student.findById(studentId);
-    if (student) {
-      let remaining = amount;
+    
+    const totalFee =
+      Number(student.courseFee || 0) -
+      Number(student.discount || 0) -
+      Number(student.scholarship || 0);
 
-      if (student?.installments?.length) {
-        for (let installment of student.installments) {
-          if (remaining <= 0) break;
-          if (installment.status === 'paid') continue;
-
-          if (installment.amount <= remaining) {
-            installment.status = 'paid';
-            installment.paidDate = new Date();
-            
-            // reset whatsapp flag
-            installment.whatsappSent=false;
-            
-            remaining -= installment.amount;
-          } else {
-            // Partial payment
-            installment.amount -= remaining; // reduce remaining amount
-            remaining = 0;
-          }
+    const previousPayments = await Payment.aggregate([
+      {
+        $match: {
+          studentId: student._id
         }
-        await student.save();
+      },
+      {
+        $group: {
+          _id: null,
+          total: { $sum: "$amount" }
+        }
       }
-    }
+    ]);
+
+    const totalPaid =
+      previousPayments[0]?.total || 0;
+
+    const remainingBalance = totalFee - totalPaid;
+      if (student) {
+        let remaining = amount;
+
+        if (student?.installments?.length) {
+          for (let installment of student.installments) {
+            if (remaining <= 0) break;
+            if (installment.status === 'paid') continue;
+
+            if (installment.amount <= remaining) {
+              installment.status = 'paid';
+              installment.paidDate = new Date();
+              
+              // reset whatsapp flag
+              installment.whatsappSent=false;
+              if (installment.status === "overdue") {
+                installment.status = "paid";
+              } else {
+                installment.status = "paid";
+              }
+              
+              remaining -= installment.amount;
+            } else {
+              // Partial payment
+              installment.amount -= remaining; // reduce remaining amount
+              remaining = 0;
+            }
+          }
+          if (remaining > 0) {
+            student.installments.forEach(inst => {
+              inst.status = "paid";
+              inst.paidDate = new Date();
+              inst.whatsappSent = false;
+            });
+          }
+          await student.save();
+        }
+      }
+      
 
     res.status(201).json(payment);
   } catch (err) {
