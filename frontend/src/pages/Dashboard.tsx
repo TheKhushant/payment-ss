@@ -9,37 +9,26 @@ export default function Dashboard() {
   const [payments, setPayments] = useState<any[]>([]);
   const [courses, setCourses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-
-  const [trackingData, setTrackingData] = useState<any[]>([]); // Pending installments
-
+  const [trackingData, setTrackingData] = useState<any[]>([]);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    loadData();
-  }, []);
+  useEffect(() => { loadData(); }, []);
 
   const loadData = async () => {
     try {
       setLoading(true);
       const [studentData, paymentData, courseData] = await Promise.all([
-        getStudents(),
-        getPayments(),
-        getCourses(),
+        getStudents(), getPayments(), getCourses(),
       ]);
-
       setStudents(studentData || []);
       setPayments(paymentData || []);
       setCourses(courseData || []);
 
-      // Build tracking data (same logic as Tracking page)
       const rows: any[] = [];
-
       studentData.forEach((student: any) => {
         if (!student.installments || !Array.isArray(student.installments)) return;
-
         student.installments.forEach((installment: any) => {
           if (installment.status === "paid" || installment.status === "Paid") return;
-
           rows.push({
             _id: installment._id || `${student._id}-${installment.dueDate}`,
             studentId: student._id,
@@ -54,236 +43,224 @@ export default function Dashboard() {
           });
         });
       });
-
-      // Sort by due date
       rows.sort((a, b) => {
         const aDate = a.dueDate ? new Date(a.dueDate).getTime() : Number.MAX_SAFE_INTEGER;
         const bDate = b.dueDate ? new Date(b.dueDate).getTime() : Number.MAX_SAFE_INTEGER;
         return aDate - bDate;
       });
-      // const paymentData = await getPayments();
-
-      console.log("student data : " ,paymentData);
       setTrackingData(rows);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
+    } catch (err) { console.error(err); } finally { setLoading(false); }
   };
 
-  // Calculations using trackingData (installments)
   const totalStudents = students.length;
   const activeStudents = students.filter((s: any) => s.status === "active" || !s.status).length;
-
-  const totalRevenue = payments.reduce(
-    (sum: number, p: any) => sum + Number(p.amount || 0), 0
-  );
-
+  const totalRevenue = payments.reduce((sum: number, p: any) => sum + Number(p.amount || 0), 0);
   const today = new Date().toISOString().split("T")[0];
-  const todaysCollections = payments
-    .filter((p: any) => p.paymentDate?.split("T")[0] === today)
-    .reduce((sum: number, p: any) => sum + Number(p.amount || 0), 0);
-
+  const todaysCollections = payments.filter((p: any) => p.paymentDate?.split("T")[0] === today).reduce((sum: number, p: any) => sum + Number(p.amount || 0), 0);
   const currentMonth = new Date().toISOString().slice(0, 7);
-  const monthlyCollection = payments
-    .filter((p: any) => p.paymentDate?.startsWith(currentMonth))
-    .reduce((sum: number, p: any) => sum + Number(p.amount || 0), 0);
+  const monthlyCollection = payments.filter((p: any) => p.paymentDate?.startsWith(currentMonth)).reduce((sum: number, p: any) => sum + Number(p.amount || 0), 0);
+  const pendingAmount = trackingData.reduce((sum: number, p: any) => sum + Number(p.amount || 0), 0);
 
-  // Pending Amount (from installments)
-  const pendingAmount = trackingData.reduce(
-    (sum: number, p: any) => sum + Number(p.amount || 0), 0
-  );
+  const upcomingPayments = trackingData.filter((p: any) => {
+    if (!p.dueDate) return false;
+    const due = new Date(p.dueDate); const now = new Date();
+    now.setHours(0, 0, 0, 0); due.setHours(0, 0, 0, 0);
+    const diffDays = Math.ceil((due.getTime() - now.getTime()) / (1000 * 3600 * 24));
+    return diffDays >= 0 && diffDays <= 7;
+  }).sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime());
 
-  // Upcoming Payments (Next 7 Days)
-  const upcomingPayments = trackingData
-    .filter((p: any) => {
-      if (!p.dueDate) return false;
-      const due = new Date(p.dueDate);
-      const now = new Date();
-      now.setHours(0, 0, 0, 0);
-      due.setHours(0, 0, 0, 0);
-      const diffDays = Math.ceil((due.getTime() - now.getTime()) / (1000 * 3600 * 24));
-      return diffDays >= 0 && diffDays <= 7;
-    })
-    .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime());
+  const overduePayments = trackingData.filter((p: any) => {
+    if (!p.dueDate) return false;
+    const due = new Date(p.dueDate); const now = new Date();
+    now.setHours(0, 0, 0, 0); due.setHours(0, 0, 0, 0);
+    return due < now;
+  }).sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime());
 
-  // Overdue Payments
-  const overduePayments = trackingData
-    .filter((p: any) => {
-      if (!p.dueDate) return false;
-      const due = new Date(p.dueDate);
-      const now = new Date();
-      now.setHours(0, 0, 0, 0);
-      due.setHours(0, 0, 0, 0);
-      return due < now;
-    })
-    .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime());
-
-  // Today's Pending Payments
   const todaysPendingPayments = trackingData.filter((p: any) => {
     if (!p.dueDate) return false;
     return p.dueDate.split("T")[0] === today;
   });
 
-  // Recent Payments (from payments collection)
-  const recentPayments = [...payments]
-    .sort((a: any, b: any) => 
-      new Date(b.paymentDate || b.createdAt).getTime() - new Date(a.paymentDate || a.createdAt).getTime()
-    )
-    .slice(0, 10);
+  const recentPayments = [...payments].sort((a: any, b: any) => 
+    new Date(b.paymentDate || b.createdAt).getTime() - new Date(a.paymentDate || a.createdAt).getTime()
+  ).slice(0, 10);
+
+  // Leather texture background
+  const leatherBg = "linear-gradient(135deg, #8B4513 0%, #A0522D 25%, #8B4513 50%, #6B3410 75%, #8B4513 100%)";
+  const leatherShadow = "inset 0 0 60px rgba(0,0,0,0.5), 5px 0 15px rgba(0,0,0,0.3)";
+  const noisePattern = `url("data:image/svg+xml,%3Csvg width='4' height='4' viewBox='0 0 4 4' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1h2v2H1z' fill='%23000' fill-opacity='0.3'/%3E%3C/svg%3E")`;
+
+  // 3D button styles
+  const btnBase = (color: string, from: string, to: string, textColor: string) => ({
+    background: `linear-gradient(145deg, ${from}, ${to}, ${from})`,
+    boxShadow: "5px 5px 10px rgba(0,0,0,0.4), -2px -2px 5px rgba(255,255,255,0.1), inset 1px 1px 2px rgba(255,255,255,0.2)",
+    border: "1px solid rgba(0,0,0,0.3)",
+    color: textColor,
+    textShadow: "1px 1px 2px rgba(0,0,0,0.8)",
+  });
+
+  const btnHover = (from: string, to: string) => ({
+    background: `linear-gradient(145deg, ${from}, ${to}, ${from})`,
+    transform: "translateY(-1px)",
+    boxShadow: "6px 6px 12px rgba(0,0,0,0.5), -2px -2px 5px rgba(255,255,255,0.15), inset 1px 1px 2px rgba(255,255,255,0.3)",
+  });
+
+  const btnActive = (from: string, to: string, textColor: string) => ({
+    background: `linear-gradient(145deg, ${from}, ${to}, ${from})`,
+    boxShadow: "inset 3px 3px 6px rgba(0,0,0,0.4), inset -1px -1px 3px rgba(255,255,255,0.2)",
+    transform: "translateY(2px)",
+    color: textColor,
+    textShadow: "0 1px 1px rgba(255,255,255,0.5)",
+  });
+
+  // Card styles
+  const cardBase = {
+    background: "linear-gradient(145deg, #F5DEB3, #DEB887, #F5DEB3)",
+    boxShadow: "8px 8px 16px rgba(0,0,0,0.4), -3px -3px 8px rgba(255,255,255,0.1), inset 1px 1px 3px rgba(255,255,255,0.3)",
+    border: "1px solid rgba(0,0,0,0.2)",
+    borderRadius: "16px",
+  };
+
+  const cardHighlight = {
+    position: "absolute" as const, inset: 0, borderRadius: "16px", pointerEvents: "none" as const,
+    background: "linear-gradient(180deg, rgba(255,255,255,0.2) 0%, transparent 40%, transparent 60%, rgba(0,0,0,0.15) 100%)",
+  };
+
+  if (loading) return (
+    <div className="flex items-center justify-center h-screen" style={{ background: leatherBg }}>
+      <div className="p-8 rounded-xl" style={{
+        background: "linear-gradient(145deg, #CD853F, #DEB887, #CD853F)",
+        boxShadow: "inset 3px 3px 6px rgba(0,0,0,0.4), inset -1px -1px 3px rgba(255,255,255,0.2)",
+      }}>
+        <p className="text-lg font-bold" style={{ color: "#3E2723", textShadow: "0 1px 1px rgba(255,255,255,0.5)" }}>
+          Loading...
+        </p>
+      </div>
+    </div>
+  );
 
   return (
-    <div className="p-6">
-      {/* Header */}
-      <div className="flex justify-betw een items-center mb-8">
-        <h1 className="text-3xl font-bold">Dashboard</h1>
-        
-        <div className="flex gap-3">
-          <button 
-            onClick={() => navigate("/tracking")}
-            className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium transition"
-          >
-            Tracking
-          </button>
-          <button 
-            onClick={() => navigate("/courses")}
-            className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium transition"
-          >
-            Courses
-          </button>
-          <button 
-            onClick={() => navigate("/addpayment")}
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition"
-          >
-            Add Payments
-          </button>
-          <button
-            onClick={() => navigate("/create-student")}
-            className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium flex items-center gap-1 transition"
-          >
-            + New Student
-          </button>
-        </div>
-      </div>
+    <div className="min-h-screen p-3 md:p-5 relative overflow-hidden" style={{ background: leatherBg, boxShadow: leatherShadow }}>
+      {/* Leather texture overlay */}
+      <div className="absolute inset-0 opacity-20 pointer-events-none" style={{ backgroundImage: noisePattern, backgroundSize: "3px 3px" }} />
+      
+      {/* Stitching border */}
+      <div className="absolute inset-3 border-2 border-dashed border-yellow-700/40 rounded-xl pointer-events-none" />
 
-      {/* Metrics Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-10">
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-          <p className="text-gray-500 text-sm">Total Students</p>
-          <h2 className="text-4xl font-bold mt-2">{totalStudents}</h2>
+      <div className="relative z-10">
+        {/* Header */}
+        <div className="flex flex-col md:flex-row justify-between gap-3 md:gap-0 items-start md:items-center mb-5">
+          <div className="p-4 rounded-lg" style={{
+            background: "linear-gradient(145deg, #B8860B, #DAA520, #B8860B)",
+            boxShadow: "inset 2px 2px 5px rgba(255,255,255,0.4), inset -2px -2px 5px rgba(0,0,0,0.3), 3px 3px 8px rgba(0,0,0,0.4)",
+            border: "1px solid #8B6914",
+          }}> 
+            <h1 className="text-xl md:text-2xl font-bold" style={{ color: "#4A3728", textShadow: "1px 1px 2px rgba(255,255,255,0.6), -1px -1px 1px rgba(0,0,0,0.3)" }}>
+              Dashboard
+            </h1>
+          </div>
+
+          <div className="flex gap-3">
+            {/* <SkeuoButton label="Tracking" onClick={() => navigate("/tracking")} {...btnBase("gray", "#6B3410", "#8B4513", "#D2B48C")} hover={btnHover("#7B3F00", "#A0522D")} active={btnActive("#CD853F", "#DEB887", "#3E2723")} />
+            <SkeuoButton label="Courses" onClick={() => navigate("/courses")} {...btnBase("gray", "#6B3410", "#8B4513", "#D2B48C")} hover={btnHover("#7B3F00", "#A0522D")} active={btnActive("#CD853F", "#DEB887", "#3E2723")} />
+            <SkeuoButton label="Add Payments" onClick={() => navigate("/addpayment")} {...btnBase("blue", "#1a365d", "#2c5282", "#E2E8F0")} hover={btnHover("#2a4365", "#3182ce")} active={btnActive("#63b3ed", "#90cdf4", "#1a365d")} /> */}
+            <SkeuoButton label="+ New Student" onClick={() => navigate("/create-student")} {...btnBase("green", "#22543d", "#276749", "#E2E8F0")} hover={btnHover("#276749", "#38a169")} active={btnActive("#68d391", "#9ae6b4", "#22543d")} />
+          </div>
         </div>
 
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-          <p className="text-gray-500 text-sm">Active Students</p>
-          <h2 className="text-4xl font-bold mt-2 text-green-600">{activeStudents}</h2>
+        {/* Metrics Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-8 gap-4 mb-6">
+          <MetricCard title="Total Students" value={totalStudents.toString()} color="#4A3728" />
+          <MetricCard title="Active Students" value={activeStudents.toString()} color="#2F855A" />
+          <MetricCard title="Total Revenue" value={`₹${totalRevenue.toLocaleString()}`} color="#4A3728" />
+          <MetricCard title="Today's Collections" value={`₹${todaysCollections.toLocaleString()}`} color="#2F855A" />
+          <MetricCard title="Monthly Collection" value={`₹${monthlyCollection.toLocaleString()}`} color="#4A3728" />
+          <MetricCard title="Pending Amount" value={`₹${pendingAmount.toLocaleString()}`} color="#C05621" />
+          <MetricCard title="Upcoming Payments" value={upcomingPayments.length.toString()} color="#4A3728" />
+          <MetricCard title="Overdue Payments" value={overduePayments.length.toString()} color="#C53030" />
         </div>
 
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-          <p className="text-gray-500 text-sm">Total Revenue</p>
-          <h2 className="text-4xl font-bold mt-2">₹{totalRevenue.toLocaleString()}</h2>
-        </div>
-
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-          <p className="text-gray-500 text-sm">Today's Collections</p>
-          <h2 className="text-4xl font-bold mt-2 text-emerald-600">₹{todaysCollections.toLocaleString()}</h2>
-        </div>
-
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-          <p className="text-gray-500 text-sm">Monthly Collection</p>
-          <h2 className="text-4xl font-bold mt-2">₹{monthlyCollection.toLocaleString()}</h2>
-        </div>
-
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-          <p className="text-gray-500 text-sm">Pending Amount</p>
-          <h2 className="text-4xl font-bold mt-2 text-orange-600">₹{pendingAmount.toLocaleString()}</h2>
-        </div>
-
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-          <p className="text-gray-500 text-sm">Upcoming Payments</p>
-          <h2 className="text-4xl font-bold mt-2">{upcomingPayments.length}</h2>
-        </div>
-
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-          <p className="text-gray-500 text-sm">Overdue Payments</p>
-          <h2 className="text-4xl font-bold mt-2 text-red-600">{overduePayments.length}</h2>
-        </div>
-      </div>
-
-      {/* Lists Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Today's Pending Payments */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-          <h3 className="font-semibold text-lg mb-4">Today's Pending Payments</h3>
-          {todaysPendingPayments.length === 0 ? (
-            <p className="text-gray-500 py-8 text-center">No pending payments today</p>
-          ) : (
-            <div className="space-y-3 max-h-96 overflow-auto">
-              {todaysPendingPayments.map((payment: any) => (
-                <div key={payment._id} className="flex justify-between items-center p-3 bg-gray-50 rounded-xl">
-                  <div>
-                    <p className="font-medium">{payment.studentName}</p>
-                    <p className="text-sm text-gray-500">Due today</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-semibold text-orange-600">₹{payment.amount}</p>
-                    <p className="text-xs text-gray-500">{payment.course}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Upcoming Payments (Next 7 Days) */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-          <h3 className="font-semibold text-lg mb-4">Upcoming Payments (Next 7 Days)</h3>
-          {upcomingPayments.length === 0 ? (
-            <p className="text-gray-500 py-8 text-center">No upcoming payments</p>
-          ) : (
-            <div className="space-y-3 max-h-96 overflow-auto">
-              {upcomingPayments.map((payment: any) => (
-                <div key={payment._id} className="flex justify-between items-center p-3 bg-gray-50 rounded-xl">
-                  <div>
-                    <p className="font-medium">{payment.studentName}</p>
-                    <p className="text-sm text-gray-500">
-                      Due: {new Date(payment.dueDate).toLocaleDateString('en-IN')}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-semibold">₹{payment.amount}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Recent Payments */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-          <h3 className="font-semibold text-lg mb-4">Recent Payments</h3>
-          {recentPayments.length === 0 ? (
-            <p className="text-gray-500 py-8 text-center">No recent payments</p>
-          ) : (
-            <div className="space-y-3 max-h-96 overflow-auto">
-              {recentPayments.map((payment: any, idx: number) => (
-                <div key={idx} className="flex justify-between items-center p-3 bg-gray-50 rounded-xl">
-                  <div>
-                    <p className="font-medium">{ payment.studentId?.name || payment.studentName || "Student"}</p>
-                    <p className="text-sm text-gray-500">
-                      {new Date(payment.paymentDate || payment.createdAt).toLocaleDateString('en-IN')}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-semibold text-green-600">₹{payment.amount}</p>
-                    <p className="text-xs text-gray-500 capitalize">{payment.status || "Paid"}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+        {/* Lists Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <ListCard title="Today's Pending Payments" data={todaysPendingPayments} type="pending" />
+          <ListCard title="Upcoming Payments (Next 7 Days)" data={upcomingPayments} type="upcoming" />
+          <ListCard title="Recent Payments" data={recentPayments} type="recent" />
         </div>
       </div>
     </div>
   );
+
+  function SkeuoButton({ label, onClick, hover, active, ...style }: any) {
+    const [isPressed, setIsPressed] = useState(false);
+    return (
+      <button
+        onClick={onClick}
+        onMouseEnter={(e) => { if (!isPressed) Object.assign(e.currentTarget.style, hover); }}
+        onMouseLeave={(e) => { setIsPressed(false); Object.assign(e.currentTarget.style, style); }}
+        onMouseDown={(e) => { setIsPressed(true); Object.assign(e.currentTarget.style, active); }}
+        onMouseUp={(e) => { Object.assign(e.currentTarget.style, hover); }}
+        className="px-3 py-2 rounded-lg font-semibold text-xs md:text-sm transition-all duration-150 relative overflow-hidden"
+        style={style}
+      >
+        <span style={{ position: "absolute", inset: 0, borderRadius: "8px", pointerEvents: "none", background: "linear-gradient(180deg, rgba(255,255,255,0.15) 0%, transparent 40%, transparent 60%, rgba(0,0,0,0.2) 100%)" }} />
+        <span className="relative z-10">{label}</span>
+      </button>
+    );
+  }
+
+  function MetricCard({ title, value, color }: { title: string; value: string; color: string }) {
+    return (
+      <div className="p-4 relative" style={cardBase}>
+        <div style={cardHighlight} />
+        <p className="text-sm font-bold uppercase tracking-wider" style={{ color: "#8B4513", textShadow: "0 1px 1px rgba(255,255,255,0.5)" }}>{title}</p>
+        <h2 className="text-4xl font-bold mt-2" style={{ color, textShadow: "1px 1px 2px rgba(0,0,0,0.3), 0 1px 1px rgba(255,255,255,0.5)" }}>{value}</h2>
+      </div>
+    );
+  }
+
+  function ListCard({ title, data, type }: { title: string; data: any[]; type: string }) {
+    return (
+      <div className="p-6 relative" style={cardBase}>
+        <div style={cardHighlight} />
+        <h3 className="font-bold text-lg mb-4" style={{ color: "#4A3728", textShadow: "1px 1px 2px rgba(255,255,255,0.5)" }}>{title}</h3>
+        {data.length === 0 ? (
+          <p className="py-8 text-center font-medium" style={{ color: "#8B4513", textShadow: "0 1px 1px rgba(255,255,255,0.5)" }}>No {type === "recent" ? "recent" : type} payments</p>
+        ) : (
+          <div className="space-y-3 max-h-96 overflow-auto">
+            {data.map((item: any, idx: number) => (
+              <div key={item._id || idx} className="flex justify-between items-center p-3 rounded-xl relative overflow-hidden" style={{
+                background: "linear-gradient(145deg, #DEB887, #F5DEB3, #DEB887)",
+                boxShadow: "3px 3px 6px rgba(0,0,0,0.3), -1px -1px 3px rgba(255,255,255,0.2), inset 1px 1px 2px rgba(255,255,255,0.3)",
+                border: "1px solid rgba(0,0,0,0.15)",
+              }}>
+                <span style={{ position: "absolute", inset: 0, borderRadius: "12px", pointerEvents: "none", background: "linear-gradient(180deg, rgba(255,255,255,0.2) 0%, transparent 50%, rgba(0,0,0,0.1) 100%)" }} />
+                <div className="relative z-10">
+                  <p className="font-bold" style={{ color: "#3E2723", textShadow: "0 1px 1px rgba(255,255,255,0.5)" }}>
+                    {type === "recent" ? (item.studentId?.name || item.studentName || "Student") : item.studentName}
+                  </p>
+                  <p className="text-sm font-medium" style={{ color: "#8B4513", textShadow: "0 1px 1px rgba(255,255,255,0.5)" }}>
+                    {type === "pending" ? "Due today" : type === "upcoming" ? `Due: ${new Date(item.dueDate).toLocaleDateString('en-IN')}` : new Date(item.paymentDate || item.createdAt).toLocaleDateString('en-IN')}
+                  </p>
+                </div>
+                <div className="text-right relative z-10">
+                  <p className="font-bold" style={{ 
+                    color: type === "recent" ? "#2F855A" : type === "pending" ? "#C05621" : "#4A3728",
+                    textShadow: "1px 1px 2px rgba(0,0,0,0.2), 0 1px 1px rgba(255,255,255,0.5)" 
+                  }}>
+                    ₹{item.amount}
+                  </p>
+                  {type === "recent" && (
+                    <p className="text-xs font-bold uppercase" style={{ color: "#8B4513", textShadow: "0 1px 1px rgba(255,255,255,0.5)" }}>{item.status || "Paid"}</p>
+                  )}
+                  {type !== "recent" && (
+                    <p className="text-xs font-medium" style={{ color: "#8B4513", textShadow: "0 1px 1px rgba(255,255,255,0.5)" }}>{item.course}</p>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
 }

@@ -99,185 +99,354 @@ export default function Tracking() {
       return due < now;
     })
     .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime());
-
+  const overdueTotal = overduePayments.reduce(
+    (sum: number, p: any) => sum + Number(p.amount || 0),
+    0
+  );
   const openStudentInfo = (payment: any) => {
     setSelectedPayment(payment);
     setShowStudentModal(true);
   };
 
-  console.log("UPCOMING", upcomingPayments);
-  console.log("OVERDUE", overduePayments);
+  // console.log("UPCOMING", upcomingPayments);
+  // console.log("OVERDUE", overduePayments);
+
+  const leatherBg = "linear-gradient(135deg, #8B4513 0%, #A0522D 25%, #8B4513 50%, #6B3410 75%, #8B4513 100%)";
+  const leatherShadow = "inset 0 0 60px rgba(0,0,0,0.5)";
+  const noisePattern = `url("data:image/svg+xml,%3Csvg width='4' height='4' viewBox='0 0 4 4' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1h2v2H1z' fill='%23000' fill-opacity='0.3'/%3E%3C/svg%3E")`;
+
+  const cardBase = {
+    background: "linear-gradient(145deg, #F5DEB3, #DEB887, #F5DEB3)",
+    boxShadow: "8px 8px 16px rgba(0,0,0,0.4), -3px -3px 8px rgba(255,255,255,0.1), inset 1px 1px 3px rgba(255,255,255,0.3)",
+    border: "1px solid rgba(0,0,0,0.2)",
+    borderRadius: "16px",
+  };
+
+  const cardHighlight = {
+    position: "absolute" as const, inset: 0, borderRadius: "16px", pointerEvents: "none" as const,
+    background: "linear-gradient(180deg, rgba(255,255,255,0.2) 0%, transparent 40%, transparent 60%, rgba(0,0,0,0.15) 100%)",
+  };
+
+  const btnBase = (from: string, to: string, textColor: string) => ({
+    background: `linear-gradient(145deg, ${from}, ${to}, ${from})`,
+    boxShadow: "5px 5px 10px rgba(0,0,0,0.4), -2px -2px 5px rgba(255,255,255,0.1), inset 1px 1px 2px rgba(255,255,255,0.2)",
+    border: "1px solid rgba(0,0,0,0.3)",
+    color: textColor,
+    textShadow: "1px 1px 2px rgba(0,0,0,0.8)",
+    borderRadius: "12px",
+  });
+
+  const btnHover = (from: string, to: string) => ({
+    background: `linear-gradient(145deg, ${from}, ${to}, ${from})`,
+    transform: "translateY(-1px)",
+    boxShadow: "6px 6px 12px rgba(0,0,0,0.5), -2px -2px 5px rgba(255,255,255,0.15), inset 1px 1px 2px rgba(255,255,255,0.3)",
+  });
+
+  const btnActive = (from: string, to: string, textColor: string) => ({
+    background: `linear-gradient(145deg, ${from}, ${to}, ${from})`,
+    boxShadow: "inset 3px 3px 6px rgba(0,0,0,0.4), inset -1px -1px 3px rgba(255,255,255,0.2)",
+    transform: "translateY(2px)",
+    color: textColor,
+    textShadow: "0 1px 1px rgba(255,255,255,0.5)",
+  });
 
   return (
-    <div className="p-6">
-      {/* Header */}
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">Payment Tracking</h1>
-        <button
-          onClick={loadData}
-          className="px-5 py-2 bg-gray-100 hover:bg-gray-200 rounded-xl text-sm font-medium transition"
-        >
-          🔄 Refresh
-        </button>
-      </div>
+    <div className="min-h-screen p-6 relative overflow-hidden" style={{ background: leatherBg, boxShadow: leatherShadow }}>
+      <div className="absolute inset-0 opacity-20 pointer-events-none" style={{ backgroundImage: noisePattern, backgroundSize: "3px 3px" }} />
+      <div className="absolute inset-3 border-2 border-dashed border-yellow-700/40 rounded-xl pointer-events-none" />
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Upcoming Payments */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-          <div className="flex justify-between items-start mb-6">
-            <div>
-              <h2 className="text-2xl font-semibold text-emerald-700">Upcoming Payments</h2>
-              <p className="text-sm text-gray-500">ALL Upcoming Payments </p>
-            </div>
-            <div className="text-right">
-              <p className="text-sm text-gray-500">Total Due</p>
-              <p className="text-3xl font-bold text-emerald-600">₹{upcomingTotal.toLocaleString()}</p>
-            </div>
+      <div className="relative z-10">
+        {/* Header */}
+        <div className="flex justify-between items-center mb-8">
+          <div className="p-4 rounded-lg" style={{
+            background: "linear-gradient(145deg, #B8860B, #DAA520, #B8860B)",
+            boxShadow: "inset 2px 2px 5px rgba(255,255,255,0.4), inset -2px -2px 5px rgba(0,0,0,0.3), 3px 3px 8px rgba(0,0,0,0.4)",
+            border: "1px solid #8B6914",
+          }}>
+            <h1 className="text-3xl font-bold" style={{ color: "#4A3728", textShadow: "1px 1px 2px rgba(255,255,255,0.6), -1px -1px 1px rgba(0,0,0,0.3)" }}>
+              Payment Tracking
+            </h1>
           </div>
-
-          <div className="space-y-4 max-h-[calc(100vh-280px)] overflow-auto pr-2">
-            {loading ? (
-              <p className="text-center py-12 text-gray-500">Loading upcoming payments...</p>
-            ) : upcomingPayments.length === 0 ? (
-              <p className="text-center py-12 text-gray-500">No upcoming payments in next 7 days 🎉</p>
-            ) : (
-              upcomingPayments.map((payment: any) => (
-                <div
-                  key={payment._id}
-                  className="flex justify-between items-center bg-gray-50 p-5 rounded-xl hover:bg-gray-100 transition"
-                >
-                  <div className="flex-1">
-                    <p className="font-semibold text-lg">{payment.studentName}</p>
-                    <p className="text-sm text-gray-600">
-                      {payment.course} • {payment.college && `(${payment.college})`}
-                    </p>
-                    <p className="text-sm text-gray-500 mt-1">
-                      Due: <span className="font-medium">{new Date(payment.dueDate).toLocaleDateString('en-IN')}</span>
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-2xl font-bold text-emerald-600">₹{Number(payment.amount).toLocaleString()}</p>
-                    <button
-                      onClick={() => openStudentInfo(payment)}
-                      className="text-blue-600 hover:text-blue-700 text-sm mt-2 font-medium"
-                    >
-                      View Student →
-                    </button>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
+          <SkeuoButton
+            label="🔄 Refresh"
+            onClick={loadData}
+            base={btnBase("#6B3410", "#8B4513", "#D2B48C")}
+            hover={btnHover("#7B3F00", "#A0522D")}
+            active={btnActive("#CD853F", "#DEB887", "#3E2723")}
+          />
         </div>
 
-        {/* Overdue Payments */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-          <div className="mb-6">
-            <h2 className="text-2xl font-semibold text-red-700">Overdue Payments</h2>
-            <p className="text-sm text-gray-500">Immediate Attention Required</p>
-          </div>
-
-          <div className="space-y-4 max-h-[calc(100vh-280px)] overflow-auto pr-2">
-            {loading ? (
-              <p className="text-center py-12 text-gray-500">Loading overdue payments...</p>
-            ) : overduePayments.length === 0 ? (
-              <p className="text-center py-12 text-gray-500">No overdue payments 🎉 Great Job!</p>
-            ) : (
-              overduePayments.map((payment: any) => (
-                <div
-                  key={payment._id}
-                  className="flex justify-between items-center bg-red-50 p-5 rounded-xl hover:bg-red-100 transition border border-red-100"
-                >
-                  <div className="flex-1">
-                    <p className="font-semibold text-lg">{payment.studentName}</p>
-                    <p className="text-sm text-gray-600">
-                      {payment.course} • {payment.college && `(${payment.college})`}
-                    </p>
-                    <p className="text-sm text-red-600 mt-1">
-                      Due: <span className="font-medium">{new Date(payment.dueDate).toLocaleDateString('en-IN')}</span>
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-2xl font-bold text-red-600">₹{Number(payment.amount).toLocaleString()}</p>
-                    <button
-                      onClick={() => openStudentInfo(payment)}
-                      className="text-blue-600 hover:text-blue-700 text-sm mt-2 font-medium"
-                    >
-                      View Student →
-                    </button>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Student Information Modal */}
-      {showStudentModal && selectedPayment && (
-        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-3xl max-w-lg w-full max-h-[90vh] overflow-hidden">
-            <div className="p-6 border-b">
-              <h3 className="text-2xl font-bold">Student Information</h3>
-              <p className="text-gray-500">{selectedPayment.studentName}</p>
-            </div>
-
-            <div className="p-6 space-y-6 overflow-auto max-h-[65vh]">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-xs text-gray-500">EMAIL</p>
-                  <p className="font-medium">{selectedPayment.studentEmail || "Not available"}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-500">MOBILE</p>
-                  <p className="font-medium">{selectedPayment.studentMobile || "Not available"}</p>
-                </div>
-              </div>
-
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Upcoming Payments */}
+          <div className="p-6 relative" style={cardBase}>
+            <div style={cardHighlight} />
+            <div className="flex justify-between items-start mb-6 relative z-10">
               <div>
-                <p className="text-xs text-gray-500">COURSE</p>
-                <p className="font-medium">{selectedPayment.course}</p>
+                <h2 className="text-2xl font-bold" style={{ color: "#2F855A", textShadow: "1px 1px 2px rgba(255,255,255,0.5)" }}>Upcoming Payments</h2>
+                <p className="text-sm font-bold" style={{ color: "#8B4513", textShadow: "0 1px 1px rgba(255,255,255,0.5)" }}>ALL Upcoming Payments</p>
               </div>
-
-              {selectedPayment.college && (
-                <div>
-                  <p className="text-xs text-gray-500">COLLEGE</p>
-                  <p className="font-medium">{selectedPayment.college}</p>
-                </div>
-              )}
-
-              <div className="pt-4 border-t">
-                <p className="text-xs text-gray-500 mb-2">PAYMENT DETAILS</p>
-                <div className="bg-gray-50 p-4 rounded-2xl">
-                  <div className="flex justify-between mb-2">
-                    <span>Amount Due</span>
-                    <span className="font-bold">₹{Number(selectedPayment.amount).toLocaleString()}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Due Date</span>
-                    <span>{new Date(selectedPayment.dueDate).toLocaleDateString('en-IN')}</span>
-                  </div>
-                </div>
+              <div className="text-right p-3 rounded-lg" style={{
+                background: "linear-gradient(145deg, #48bb78, #68d391, #48bb78)",
+                boxShadow: "inset 2px 2px 5px rgba(0,0,0,0.3), inset -1px -1px 3px rgba(255,255,255,0.3), 3px 3px 8px rgba(0,0,0,0.3)",
+                border: "1px solid rgba(0,0,0,0.2)",
+              }}>
+                <p className="text-xs font-bold" style={{ color: "#fff", textShadow: "1px 1px 2px rgba(0,0,0,0.5)" }}>Total Due</p>
+                <p className="text-3xl font-bold" style={{ color: "#fff", textShadow: "2px 2px 4px rgba(0,0,0,0.5)" }}>₹{upcomingTotal.toLocaleString()}</p>
               </div>
             </div>
+              <div className="grid grid-cols-4 gap-4 px-3 py-2 mb-2 font-bold text-sm border-b">
+                <div>Student</div>
+                <div>Course</div>
+                <div className="text-center">Due Date</div>
+                <div className="text-right">Amount</div>
+              </div>
+            <div className="space-y-4 max-h-[calc(100vh-280px)] overflow-auto pr-2 relative z-10">
+              {loading ? (
+                <p className="text-center py-12 font-bold" style={{ color: "#8B4513", textShadow: "0 1px 1px rgba(255,255,255,0.5)" }}>Loading upcoming payments...</p>
+              ) : upcomingPayments.length === 0 ? (
+                <p className="text-center py-12 font-bold" style={{ color: "#2F855A", textShadow: "1px 1px 2px rgba(255,255,255,0.5)" }}>No upcoming payments in next 60 days 🎉</p>
+              ) : (
+                upcomingPayments.map((payment: any) => (
+                  <div
+                    key={payment._id}
+                    className="p-3 rounded-xl cursor-pointer hover:scale-[1.01] transition-all relative overflow-hidden transition-all duration-150 hover:translate-y-[-2px]"
+                    style={{
+                      background: "linear-gradient(145deg, #DEB887, #F5DEB3, #DEB887)",
+                      boxShadow: "4px 4px 8px rgba(0,0,0,0.3), -2px -2px 5px rgba(255,255,255,0.2), inset 1px 1px 2px rgba(255,255,255,0.3)",
+                      border: "1px solid rgba(0,0,0,0.15)",
+                    }}
+                  >
+                    <div style={{
+                      position: "absolute", inset: 0, borderRadius: "12px", pointerEvents: "none",
+                      background: "linear-gradient(180deg, rgba(255,255,255,0.2) 0%, transparent 50%, rgba(0,0,0,0.1) 100%)",
+                    }} />
+                    <div
+                      onClick={() => openStudentInfo(payment)}
+                      className="grid grid-cols-4 gap-4 items-center w-full cursor-pointer relative z-10"
+                    >
+                      <div className="font-bold truncate">
+                        {payment.studentName}
+                      </div>
 
-            <div className="p-6 border-t flex gap-3">
-              <button
-                onClick={() => setShowStudentModal(false)}
-                className="flex-1 py-3 border border-gray-300 rounded-2xl font-medium hover:bg-gray-50"
-              >
-                Close
-              </button>
-              <button
-                onClick={() => window.location.href = `/students/${selectedPayment.studentId}`}
-                className="flex-1 py-3 bg-blue-600 text-white rounded-2xl font-medium hover:bg-blue-700"
-              >
-                Full Profile
-              </button>
+                      <div className="truncate">
+                        {payment.course}
+                      </div>
+
+                      <div className="text-center font-semibold">
+                        {new Date(payment.dueDate).toLocaleDateString("en-IN")}
+                      </div>
+
+                      <div className="text-right font-bold">
+                        ₹{Number(payment.amount).toLocaleString()}
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
+          {/* Overdue Payments */}
+          <div className="p-6 relative" style={cardBase}>
+            <div style={cardHighlight} />
+            <div className="flex justify-between items-start mb-6 relative z-10">
+              <div>
+                <h2 className="text-2xl font-bold" style={{ color: "#C53030" }}>
+                  Overdue Payments
+                </h2>
+                <p className="text-sm font-bold" style={{ color: "#8B4513" }}>
+                  Immediate Attention Required
+                </p>
+              </div>
+
+              <div className="text-right p-3 rounded-lg" style={{
+                background: "linear-gradient(145deg, #c53030, #e53e3e, #c53030)",
+                boxShadow: "3px 3px 8px rgba(0,0,0,0.3)",
+              }}>
+                <p className="text-xs font-bold text-white">
+                  Total Overdue
+                </p>
+                <p className="text-3xl font-bold text-white">
+                  ₹{overdueTotal.toLocaleString()}
+                </p>
+              </div>
+            </div>
+              <div className="grid grid-cols-4 gap-4 px-3 py-2 mb-2 font-bold text-sm border-b">
+                <div>Student</div>
+                <div>Course</div>
+                <div className="text-center">Due Date</div>
+                <div className="text-right">Amount</div>
+              </div>
+            <div className="space-y-4 max-h-[calc(100vh-280px)] overflow-auto pr-2 relative z-10">
+              {loading ? (
+                <p className="text-center py-12 font-bold" style={{ color: "#8B4513", textShadow: "0 1px 1px rgba(255,255,255,0.5)" }}>Loading overdue payments...</p>
+              ) : overduePayments.length === 0 ? (
+                <p className="text-center py-12 font-bold" style={{ color: "#2F855A", textShadow: "1px 1px 2px rgba(255,255,255,0.5)" }}>No overdue payments 🎉 Great Job!</p>
+              ) : (
+                overduePayments.map((payment: any) => (
+                  <div
+                    key={payment._id}
+                    className="flex justify-between items-center p-5 rounded-xl relative overflow-hidden transition-all duration-150 hover:translate-y-[-2px]"
+                    style={{
+                      background: "linear-gradient(145deg, #c53030, #e53e3e, #c53030)",
+                      boxShadow: "4px 4px 8px rgba(0,0,0,0.4), -2px -2px 5px rgba(255,255,255,0.15), inset 1px 1px 2px rgba(255,255,255,0.3)",
+                      border: "1px solid rgba(0,0,0,0.2)",
+                    }}
+                  >
+                    <div style={{
+                      position: "absolute", inset: 0, borderRadius: "12px", pointerEvents: "none",
+                      background: "linear-gradient(180deg, rgba(255,255,255,0.2) 0%, transparent 50%, rgba(0,0,0,0.2) 100%)",
+                    }} />
+                    <div
+                      onClick={() => openStudentInfo(payment)}
+                      className="grid grid-cols-4 gap-4 items-center w-full cursor-pointer relative z-10"
+                    >
+                      <div className="font-bold truncate">
+                        {payment.studentName}
+                      </div>
+
+                      <div className="truncate">
+                        {payment.course}
+                      </div>
+
+                      <div className="text-center font-semibold">
+                        {new Date(payment.dueDate).toLocaleDateString("en-IN")}
+                      </div>
+
+                      <div className="text-right font-bold">
+                        ₹{Number(payment.amount).toLocaleString()}
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         </div>
-      )}
+
+        {/* Student Information Modal */}
+        {showStudentModal && selectedPayment && (
+          <div className="fixed inset-0 flex items-center justify-center z-50 p-4" style={{ background: "rgba(0,0,0,0.7)" }}>
+            <div className="relative w-full max-w-lg max-h-[90vh] overflow-hidden" style={{
+              background: "linear-gradient(145deg, #F5DEB3, #DEB887, #F5DEB3)",
+              boxShadow: "12px 12px 24px rgba(0,0,0,0.5), -4px -4px 12px rgba(255,255,255,0.1), inset 1px 1px 3px rgba(255,255,255,0.3)",
+              border: "1px solid rgba(0,0,0,0.3)",
+              borderRadius: "20px",
+            }}>
+              <div style={{
+                position: "absolute", inset: 0, borderRadius: "20px", pointerEvents: "none",
+                background: "linear-gradient(180deg, rgba(255,255,255,0.2) 0%, transparent 40%, transparent 60%, rgba(0,0,0,0.15) 100%)",
+              }} />
+              
+              <div className="p-6 relative z-10" style={{ borderBottom: "2px solid #8B4513" }}>
+                <h3 className="text-2xl font-bold" style={{ color: "#4A3728", textShadow: "1px 1px 2px rgba(255,255,255,0.5)" }}>Student Information</h3>
+                <p className="font-bold" style={{ color: "#8B4513", textShadow: "0 1px 1px rgba(255,255,255,0.5)" }}>{selectedPayment.studentName}</p>
+              </div>
+
+              <div className="p-6 space-y-6 overflow-auto max-h-[65vh] relative z-10">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="p-3 rounded-lg" style={{
+                    background: "linear-gradient(145deg, #DEB887, #F5DEB3, #DEB887)",
+                    boxShadow: "2px 2px 4px rgba(0,0,0,0.2), inset 1px 1px 2px rgba(255,255,255,0.3)",
+                    border: "1px solid rgba(0,0,0,0.15)",
+                  }}>
+                    <p className="text-xs font-bold uppercase" style={{ color: "#8B4513", textShadow: "0 1px 1px rgba(255,255,255,0.5)" }}>EMAIL</p>
+                    <p className="font-bold" style={{ color: "#3E2723", textShadow: "0 1px 1px rgba(255,255,255,0.5)" }}>{selectedPayment.studentEmail || "Not available"}</p>
+                  </div>
+                  <div className="p-3 rounded-lg" style={{
+                    background: "linear-gradient(145deg, #DEB887, #F5DEB3, #DEB887)",
+                    boxShadow: "2px 2px 4px rgba(0,0,0,0.2), inset 1px 1px 2px rgba(255,255,255,0.3)",
+                    border: "1px solid rgba(0,0,0,0.15)",
+                  }}>
+                    <p className="text-xs font-bold uppercase" style={{ color: "#8B4513", textShadow: "0 1px 1px rgba(255,255,255,0.5)" }}>MOBILE</p>
+                    <p className="font-bold" style={{ color: "#3E2723", textShadow: "0 1px 1px rgba(255,255,255,0.5)" }}>{selectedPayment.studentMobile || "Not available"}</p>
+                  </div>
+                </div>
+
+                <div className="p-3 rounded-lg" style={{
+                  background: "linear-gradient(145deg, #DEB887, #F5DEB3, #DEB887)",
+                  boxShadow: "2px 2px 4px rgba(0,0,0,0.2), inset 1px 1px 2px rgba(255,255,255,0.3)",
+                  border: "1px solid rgba(0,0,0,0.15)",
+                }}>
+                  <p className="text-xs font-bold uppercase" style={{ color: "#8B4513", textShadow: "0 1px 1px rgba(255,255,255,0.5)" }}>COURSE</p>
+                  <p className="font-bold" style={{ color: "#3E2723", textShadow: "0 1px 1px rgba(255,255,255,0.5)" }}>{selectedPayment.course}</p>
+                </div>
+
+                {selectedPayment.college && (
+                  <div className="p-3 rounded-lg" style={{
+                    background: "linear-gradient(145deg, #DEB887, #F5DEB3, #DEB887)",
+                    boxShadow: "2px 2px 4px rgba(0,0,0,0.2), inset 1px 1px 2px rgba(255,255,255,0.3)",
+                    border: "1px solid rgba(0,0,0,0.15)",
+                  }}>
+                    <p className="text-xs font-bold uppercase" style={{ color: "#8B4513", textShadow: "0 1px 1px rgba(255,255,255,0.5)" }}>COLLEGE</p>
+                    <p className="font-bold" style={{ color: "#3E2723", textShadow: "0 1px 1px rgba(255,255,255,0.5)" }}>{selectedPayment.college}</p>
+                  </div>
+                )}
+
+                <div className="pt-4" style={{ borderTop: "2px solid #8B4513" }}>
+                  <p className="text-xs font-bold uppercase mb-2" style={{ color: "#8B4513", textShadow: "0 1px 1px rgba(255,255,255,0.5)" }}>PAYMENT DETAILS</p>
+                  <div className="p-4 rounded-xl" style={{
+                    background: "linear-gradient(145deg, #DEB887, #F5DEB3, #DEB887)",
+                    boxShadow: "inset 2px 2px 5px rgba(0,0,0,0.2), inset -1px -1px 3px rgba(255,255,255,0.5), 2px 2px 4px rgba(0,0,0,0.2)",
+                    border: "1px solid rgba(0,0,0,0.15)",
+                  }}>
+                    <div className="flex justify-between mb-2">
+                      <span className="font-bold" style={{ color: "#8B4513", textShadow: "0 1px 1px rgba(255,255,255,0.5)" }}>Amount Due</span>
+                      <span className="font-bold" style={{ color: "#C05621", textShadow: "1px 1px 2px rgba(0,0,0,0.2), 0 1px 1px rgba(255,255,255,0.5)" }}>₹{Number(selectedPayment.amount).toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="font-bold" style={{ color: "#8B4513", textShadow: "0 1px 1px rgba(255,255,255,0.5)" }}>Due Date</span>
+                      <span className="font-bold" style={{ color: "#3E2723", textShadow: "0 1px 1px rgba(255,255,255,0.5)" }}>{new Date(selectedPayment.dueDate).toLocaleDateString('en-IN')}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-6 flex gap-3 relative z-10" style={{ borderTop: "2px solid #8B4513" }}>
+                <SkeuoButton
+                  label="Close"
+                  onClick={() => setShowStudentModal(false)}
+                  base={btnBase("#6B3410", "#8B4513", "#D2B48C")}
+                  hover={btnHover("#7B3F00", "#A0522D")}
+                  active={btnActive("#CD853F", "#DEB887", "#3E2723")}
+                  fullWidth
+                />
+                {/* <SkeuoButton
+                  label="Full Profile"
+                  onClick={() => window.location.href = `/students/${selectedPayment.studentId}`}
+                  base={btnBase("#3182ce", "#63b3ed", "#fff")}
+                  hover={btnHover("#2b6cb0", "#4299e1")}
+                  active={btnActive("#90cdf4", "#bee3f8", "#2b6cb0")}
+                  fullWidth
+                /> */}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
+
+  function SkeuoButton({ label, onClick, base, hover, active, disabled, fullWidth }: any) {
+    const [isPressed, setIsPressed] = useState(false);
+
+    return (
+      <button
+        onClick={onClick}
+        disabled={disabled}
+        onMouseEnter={(e) => { if (!disabled && !isPressed) Object.assign(e.currentTarget.style, hover); }}
+        onMouseLeave={(e) => { setIsPressed(false); Object.assign(e.currentTarget.style, base); }}
+        onMouseDown={(e) => { if (!disabled) { setIsPressed(true); Object.assign(e.currentTarget.style, active); } }}
+        onMouseUp={(e) => { if (!disabled) { setIsPressed(false); Object.assign(e.currentTarget.style, hover); } }}
+        className={`py-3 font-bold text-sm transition-all duration-150 relative overflow-hidden ${fullWidth ? "flex-1" : "px-5"}`}
+        style={{ ...base, cursor: disabled ? "not-allowed" : "pointer", opacity: disabled ? 0.6 : 1 }}
+      >
+        <span style={{
+          position: "absolute", inset: 0, borderRadius: "12px", pointerEvents: "none",
+          background: "linear-gradient(180deg, rgba(255,255,255,0.15) 0%, transparent 40%, transparent 60%, rgba(0,0,0,0.2) 100%)",
+        }} />
+        <span className="relative z-10">{label}</span>
+      </button>
+    );
+  }
 }
