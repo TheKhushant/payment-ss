@@ -1,62 +1,85 @@
 const mongoose = require('mongoose');
 
-const installmentSchema =
-  new mongoose.Schema({
-    amount: Number,
+const installmentSchema = new mongoose.Schema({
 
-    dueDate: Date,
+  amount: Number,
 
-    status: {
-      type: String,
-      enum: [
-        "upcoming",
-        "overdue",
-        "paid"
-      ],
-      default: "upcoming"
-    },
+  dueDate: Date,
 
-    paidDate: Date
-  });
+  status: {
+    type: String,
+    enum: [
+      "upcoming",
+      "overdue",
+      "paid"
+    ],
+    default: "upcoming"
+  },
+
+  paidDate: Date,
+
+  whatsappSent: {
+    type: Boolean,
+    default: false
+  }
+
+});
 
 const noteSchema = new mongoose.Schema({
   text: String,
-  createdAt: { type: Date, default: Date.now }
+  createdAt: {
+    type: Date,
+    default: Date.now
+  }
 });
 
-// controllers/studentController.js
-
-exports.deleteAllStudents = async (req, res) => {
-  try {
-    const result = await Student.deleteMany({});
-
-    res.status(200).json({
-      success: true,
-      message: `${result.deletedCount} students deleted successfully`,
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: "Failed to delete students",
-      error: error.message,
-    });
-  }
-};
-
 const studentSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  mobile: { type: String, required: true },
+
+  name: {
+    type: String,
+    required: true
+  },
+
+  mobile: {
+    type: String,
+    required: true
+  },
+
   email: String,
   college: String,
   admissionDate: Date,
-  courseId: { type: mongoose.Schema.Types.ObjectId, ref: 'Course' },
+
+  courseId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Course"
+  },
+
   durationMonths: Number,
   courseFee: Number,
-  discount: { type: Number, default: 0 },
-  scholarship: { type: Number, default: 0 },
+
+  discount: {
+    type: Number,
+    default: 0
+  },
+
+  scholarship: {
+    type: Number,
+    default: 0
+  },
+
   installments: [installmentSchema],
   notes: [noteSchema],
-  status: { type: String, enum: ['active', 'completed', 'inactive'], default: 'active' }
+
+  status: {
+    type: String,
+    enum: [
+      "active",
+      "completed",
+      "inactive"
+    ],
+    default: "active"
+  }
+
 }, { timestamps: true });
 
 module.exports = mongoose.model('Student', studentSchema);

@@ -22,6 +22,7 @@ exports.getPayments = async (req, res) => {
 // Create new payment (and update installment status)
 exports.createPayment = async (req, res) => {
   console.log("Payment Request:", req.body);
+  
   try {
     const { studentId, amount, method, transactionId, notes } = req.body;
 
@@ -49,6 +50,10 @@ exports.createPayment = async (req, res) => {
           if (installment.amount <= remaining) {
             installment.status = 'paid';
             installment.paidDate = new Date();
+            
+            // reset whatsapp flag
+            installment.whatsappSent=false;
+            
             remaining -= installment.amount;
           } else {
             // Partial payment
