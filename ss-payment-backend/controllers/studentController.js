@@ -1,6 +1,7 @@
 // studentController.js
 const Student = require('../models/Student');
 const Course = require('../models/Course');
+const Payment = require('../models/Payment');
 
 exports.getStudents = async (req, res) => {
   try {
@@ -23,10 +24,63 @@ exports.getStudent = async (req, res) => {
 
 exports.createStudent = async (req, res) => {
   try {
-    const student = await Student.create(req.body);
+
+    const {
+      firstPaymentAmount,
+      paymentMethod,
+      ...studentData
+    } = req.body;
+
+    const student = await Student.create(studentData);
+
+    // First payment auto create
+    if (
+      firstPaymentAmount &&
+      Number(firstPaymentAmount) > 0
+    ) {
+
+      await Payment.create({
+        studentId: student._id,
+        amount: Number(firstPaymentAmount),
+        method: paymentMethod || "Cash",
+        transactionId: `TXN-${Date.now()}`
+      });
+
+      // Mark installment paid
+      let remaining = Number(firstPaymentAmount);
+
+      for (let installment of student.installments) {
+
+        if (remaining <= 0) break;
+
+        if (installment.status === "paid")
+          continue;
+
+        if (installment.amount <= remaining) {
+
+          installment.status = "paid";
+          installment.paidDate = new Date();
+          installment.whatsappSent = false;
+
+          remaining -= installment.amount;
+
+        } else {
+
+          installment.amount -= remaining;
+          remaining = 0;
+        }
+      }
+
+      await student.save();
+    }
+
     res.status(201).json(student);
+
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    console.error(err);
+    res.status(500).json({
+      message: err.message
+    });
   }
 };
 

@@ -87,6 +87,7 @@ export default function CreateStudent() {
     fee6: 0,
   });
 
+  const [paymentMethod, setPaymentMethod] = useState("Cash");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -221,6 +222,7 @@ export default function CreateStudent() {
         : undefined,
         courseFee: formData.courseFee,
         discount: formData.discount,
+        firstPaymentAmount: installments[0]?.amount || 0, paymentMethod,
         finalFee: formData.finalFee,
         incentiveTo: formData.incentiveTo || undefined,
         installments: installments.map(({ amount, dueDate }) => ({
@@ -486,6 +488,25 @@ export default function CreateStudent() {
           <div className="bg-white rounded-2xl shadow-sm border p-8">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-semibold">Installment Plan</h2>
+              <div className="mt-4">
+                <label className="block text-sm font-medium mb-2">
+                  First Payment Method
+                </label>
+
+                <select
+                  value={paymentMethod}
+                  onChange={(e) =>
+                    setPaymentMethod(e.target.value)
+                  }
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl"
+                >
+                  <option value="Cash">Cash</option>
+                  <option value="UPI">UPI</option>
+                  <option value="Bank Transfer">
+                    Bank Transfer
+                  </option>
+                </select>
+              </div>
               <div className="flex gap-3">
                 
               </div>
