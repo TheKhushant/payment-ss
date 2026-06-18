@@ -126,6 +126,16 @@ export default function Dashboard() {
     background: "linear-gradient(180deg, rgba(255,255,255,0.2) 0%, transparent 40%, transparent 60%, rgba(0,0,0,0.15) 100%)",
   };
 
+  const todaysPendingAmount = todaysPendingPayments.reduce(
+    (sum: number, p: any) => sum + Number(p.amount || 0),
+    0
+  );
+
+  const upcomingPaymentsAmount = upcomingPayments.reduce(
+    (sum: number, p: any) => sum + Number(p.amount || 0),
+    0
+  );
+
   if (loading) return (
     <div className="flex items-center justify-center h-screen" style={{ background: leatherBg }}>
       <div className="p-8 rounded-xl" style={{
@@ -182,9 +192,25 @@ export default function Dashboard() {
 
         {/* Lists Section */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <ListCard title="Today's Pending Payments" data={todaysPendingPayments} type="pending" />
-          <ListCard title="Upcoming Payments (Next 7 Days)" data={upcomingPayments} type="upcoming" />
-          <ListCard title="Recent Payments" data={recentPayments} type="recent" />
+        <ListCard
+          title="Today's Pending Payments"
+          data={todaysPendingPayments}
+          type="pending"
+          totalAmount={todaysPendingAmount}
+        />
+
+        <ListCard
+          title="Upcoming Payments (Next 7 Days)"
+          data={upcomingPayments}
+          type="upcoming"
+          totalAmount={upcomingPaymentsAmount}
+        />
+
+        <ListCard
+          title="Recent Payments"
+          data={recentPayments}
+          type="recent"
+        />
         </div>
       </div>
     </div>
@@ -199,7 +225,7 @@ export default function Dashboard() {
         onMouseLeave={(e) => { setIsPressed(false); Object.assign(e.currentTarget.style, style); }}
         onMouseDown={(e) => { setIsPressed(true); Object.assign(e.currentTarget.style, active); }}
         onMouseUp={(e) => { Object.assign(e.currentTarget.style, hover); }}
-        className="px-3 py-2 rounded-lg font-semibold text-xs md:text-sm transition-all duration-150 relative overflow-hidden"
+        className="px-3 py-2 rounded-lg font-semibold text-  md:text-sm transition-all duration-150 relative overflow-hidden"
         style={style}
       >
         <span style={{ position: "absolute", inset: 0, borderRadius: "8px", pointerEvents: "none", background: "linear-gradient(180deg, rgba(255,255,255,0.15) 0%, transparent 40%, transparent 60%, rgba(0,0,0,0.2) 100%)" }} />
@@ -213,16 +239,40 @@ export default function Dashboard() {
       <div className="p-4 relative" style={cardBase}>
         <div style={cardHighlight} />
         <p className="text-sm font-bold uppercase tracking-wider" style={{ color: "#8B4513", textShadow: "0 1px 1px rgba(255,255,255,0.5)" }}>{title}</p>
-        <h2 className="text-4xl font-bold mt-2" style={{ color, textShadow: "1px 1px 2px rgba(0,0,0,0.3), 0 1px 1px rgba(255,255,255,0.5)" }}>{value}</h2>
+        <h2 className="text-2xl font-bold mt-2" style={{ color, textShadow: "1px 1px 2px rgba(0,0,0,0.3), 0 1px 1px rgba(255,255,255,0.5)" }}>{value}</h2>
       </div>
     );
   }
 
-  function ListCard({ title, data, type }: { title: string; data: any[]; type: string }) {
+  function ListCard({ title, data, type, totalAmount }: { title: string; data: any[]; type: string, totalAmount?: number; }) {
     return (
       <div className="p-6 relative" style={cardBase}>
         <div style={cardHighlight} />
-        <h3 className="font-bold text-lg mb-4" style={{ color: "#4A3728", textShadow: "1px 1px 2px rgba(255,255,255,0.5)" }}>{title}</h3>
+
+        <div className="flex justify-between items-center mb-4">
+          <h3
+            className="font-bold text-lg"
+            style={{
+              color: "#4A3728",
+              textShadow: "1px 1px 2px rgba(255,255,255,0.5)",
+            }}
+          >
+            {title}
+          </h3>
+
+          {totalAmount !== undefined && (
+            <span
+              className="font-bold text-sm px-3 py-1 rounded-lg"
+              style={{
+                background: "#F5DEB3",
+                color: "#2F855A",
+                boxShadow: "inset 1px 1px 2px rgba(255,255,255,0.3)",
+              }}
+            >
+              ₹{totalAmount.toLocaleString()}
+            </span>
+          )}
+        </div>
         {data.length === 0 ? (
           <p className="py-8 text-center font-medium" style={{ color: "#8B4513", textShadow: "0 1px 1px rgba(255,255,255,0.5)" }}>No {type === "recent" ? "recent" : type} payments</p>
         ) : (
