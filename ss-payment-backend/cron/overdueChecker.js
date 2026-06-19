@@ -1,6 +1,7 @@
 const cron=require("node-cron");
 const Student=require("../models/Student");
 const sendWhatsapp=require("../utils/sendWhatsapp");
+const { getInstallmentStatus, isPositiveInstallment } = require('../utils/installmentUtils');
 
 // */1 * * * *   → every 1 minute
 // 0 * * * *     → every hour
@@ -19,8 +20,9 @@ const sendWhatsapp=require("../utils/sendWhatsapp");
         const now=new Date();
 
         const students=await Student.find({
-            "installments.status":{
-                $ne:"paid"
+            installments: {
+                $exists: true,
+                $ne: []
             }
         });
 
@@ -31,8 +33,9 @@ const sendWhatsapp=require("../utils/sendWhatsapp");
             for(const installment of student.installments){
 
                 if(
-                    installment.status!=="paid" &&
-                    installment.dueDate<now
+                    isPositiveInstallment(installment) &&
+                    getInstallmentStatus(installment) === "overdue" &&
+                    !installment.whatsappSent
                 ){
 
                     installment.status="overdue";

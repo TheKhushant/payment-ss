@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Eye } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { getPayments, createPayment } from "../services/paymentService";
+import { getInstallmentStatus, isPositiveInstallment } from "../utils/installmentUtils";
 
 export default function Payments() {
   const navigate = useNavigate();
@@ -101,7 +102,7 @@ export default function Payments() {
       result = result.filter((p) => {
         const upcomingInstallment =
           p.studentId?.installments?.find(
-            (i: any) => i.status !== "paid"
+            (i: any) => isPositiveInstallment(i) && getInstallmentStatus(i) !== "paid"
           );
 
         const status = upcomingInstallment
@@ -392,7 +393,7 @@ export default function Payments() {
                       </td>
                       <td className="p-4">
                         {(() => {
-                          const upcomingInstallment = payment.studentId?.installments?.find((i: any) => i.status !== "paid");
+                          const upcomingInstallment = payment.studentId?.installments?.find((i: any) => isPositiveInstallment(i) && getInstallmentStatus(i) !== "paid");
                           return (
                             <span className="inline-flex px-4 py-1 rounded-full text-xs font-bold" style={{
                               background: upcomingInstallment
@@ -418,7 +419,7 @@ export default function Payments() {
                       </td>
                       <td className="p-4 font-bold" style={{ color: "#6B3410", textShadow: "0 1px 1px rgba(255,255,255,0.5)" }}>
                         {(() => {
-                          const upcomingInstallment = payment.studentId?.installments?.find((i: any) => i.status !== "paid");
+                          const upcomingInstallment = payment.studentId?.installments?.find((i: any) => isPositiveInstallment(i) && getInstallmentStatus(i) !== "paid");
                           return upcomingInstallment?.dueDate ? new Date(upcomingInstallment.dueDate).toLocaleDateString("en-IN") : "-";
                         })()}
                       </td>

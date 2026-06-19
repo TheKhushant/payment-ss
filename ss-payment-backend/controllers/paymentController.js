@@ -1,5 +1,6 @@
 const Payment = require('../models/Payment');
 const Student = require('../models/Student');
+const { getInstallmentStatus, isPositiveInstallment } = require('../utils/installmentUtils');
 
 
 // Create new payment (and update installment status)
@@ -52,29 +53,23 @@ exports.createPayment = async (req, res) => {
         if (student?.installments?.length) {
           for (let installment of student.installments) {
             if (remaining <= 0) break;
-            if (installment.status === 'paid') continue;
+            if (!isPositiveInstallment(installment)) continue;
+            if (getInstallmentStatus(installment) === 'paid') continue;
 
             if (installment.amount <= remaining) {
               installment.status = 'paid';
               installment.paidDate = new Date();
-              
-              // reset whatsapp flag
-              installment.whatsappSent=false;
-              if (installment.status === "overdue") {
-                installment.status = "paid";
-              } else {
-                installment.status = "paid";
-              }
-              
+              installment.whatsappSent = false;
               remaining -= installment.amount;
             } else {
               // Partial payment
-              installment.amount -= remaining; // reduce remaining amount
+              installment.amount -= remaining;
               remaining = 0;
             }
           }
           if (remaining > 0) {
             student.installments.forEach(inst => {
+              if (!isPositiveInstallment(inst)) return;
               inst.status = "paid";
               inst.paidDate = new Date();
               inst.whatsappSent = false;

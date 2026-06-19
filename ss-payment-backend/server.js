@@ -2,7 +2,10 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const connectDB = require('./config/db');
-// require("./cron/overdueChecker");
+
+if (process.env.NODE_ENV !== 'test' && process.env.DISABLE_CRON !== 'true') {
+  require('./cron/overdueChecker');
+}
 
 const app = express();
 const dns = require('dns');

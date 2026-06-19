@@ -1,13 +1,12 @@
 import { useEffect, useState } from "react";
 import { getStudents } from "../services/studentService";
 import { getPayments } from "../services/paymentService";
-import { getCourses } from "../services/courseService";
 import { useNavigate } from "react-router-dom";
+import { getInstallmentStatus, isPositiveInstallment } from "../utils/installmentUtils";
 
 export default function Dashboard() {
   const [students, setStudents] = useState<any[]>([]);
   const [payments, setPayments] = useState<any[]>([]);
-  const [courses, setCourses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [trackingData, setTrackingData] = useState<any[]>([]);
   const navigate = useNavigate();
@@ -17,18 +16,19 @@ export default function Dashboard() {
   const loadData = async () => {
     try {
       setLoading(true);
-      const [studentData, paymentData, courseData] = await Promise.all([
-        getStudents(), getPayments(), getCourses(),
+      const [studentData, paymentData] = await Promise.all([
+        getStudents(), getPayments(),
       ]);
       setStudents(studentData || []);
       setPayments(paymentData || []);
-      setCourses(courseData || []);
 
       const rows: any[] = [];
       studentData.forEach((student: any) => {
         if (!student.installments || !Array.isArray(student.installments)) return;
         student.installments.forEach((installment: any) => {
-          if (installment.status === "paid" || installment.status === "Paid") return;
+          if (!isPositiveInstallment(installment)) return;
+          const effectiveStatus = getInstallmentStatus(installment);
+          if (effectiveStatus === "paid") return;
           rows.push({
             _id: installment._id || `${student._id}-${installment.dueDate}`,
             studentId: student._id,
@@ -39,7 +39,7 @@ export default function Dashboard() {
             course: student.courseId?.name || student.course || "—",
             amount: installment.amount,
             dueDate: installment.dueDate,
-            status: installment.status || "pending",
+            status: effectiveStatus,
           });
         });
       });
@@ -61,24 +61,13 @@ export default function Dashboard() {
   const monthlyCollection = payments.filter((p: any) => p.paymentDate?.startsWith(currentMonth)).reduce((sum: number, p: any) => sum + Number(p.amount || 0), 0);
   const pendingAmount = trackingData.reduce((sum: number, p: any) => sum + Number(p.amount || 0), 0);
 
-  const upcomingPayments = trackingData.filter((p: any) => {
-    if (!p.dueDate) return false;
-    const due = new Date(p.dueDate); const now = new Date();
-    now.setHours(0, 0, 0, 0); due.setHours(0, 0, 0, 0);
-    const diffDays = Math.ceil((due.getTime() - now.getTime()) / (1000 * 3600 * 24));
-    return diffDays >= 0 && diffDays <= 7;
-  }).sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime());
+  const upcomingPayments = trackingData.filter((p: any) => p.status === "upcoming").sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime());
 
-  const overduePayments = trackingData.filter((p: any) => {
-    if (!p.dueDate) return false;
-    const due = new Date(p.dueDate); const now = new Date();
-    now.setHours(0, 0, 0, 0); due.setHours(0, 0, 0, 0);
-    return due < now;
-  }).sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime());
+  const overduePayments = trackingData.filter((p: any) => p.status === "overdue").sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime());
 
   const todaysPendingPayments = trackingData.filter((p: any) => {
     if (!p.dueDate) return false;
-    return p.dueDate.split("T")[0] === today;
+    return new Date(p.dueDate).toISOString().split("T")[0] === today;
   });
 
   const recentPayments = [...payments].sort((a: any, b: any) => 
@@ -91,7 +80,7 @@ export default function Dashboard() {
   const noisePattern = `url("data:image/svg+xml,%3Csvg width='4' height='4' viewBox='0 0 4 4' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1h2v2H1z' fill='%23000' fill-opacity='0.3'/%3E%3C/svg%3E")`;
 
   // 3D button styles
-  const btnBase = (color: string, from: string, to: string, textColor: string) => ({
+  const btnBase = (from: string, to: string, textColor: string) => ({
     background: `linear-gradient(145deg, ${from}, ${to}, ${from})`,
     boxShadow: "5px 5px 10px rgba(0,0,0,0.4), -2px -2px 5px rgba(255,255,255,0.1), inset 1px 1px 2px rgba(255,255,255,0.2)",
     border: "1px solid rgba(0,0,0,0.3)",
@@ -174,7 +163,7 @@ export default function Dashboard() {
             {/* <SkeuoButton label="Tracking" onClick={() => navigate("/tracking")} {...btnBase("gray", "#6B3410", "#8B4513", "#D2B48C")} hover={btnHover("#7B3F00", "#A0522D")} active={btnActive("#CD853F", "#DEB887", "#3E2723")} />
             <SkeuoButton label="Courses" onClick={() => navigate("/courses")} {...btnBase("gray", "#6B3410", "#8B4513", "#D2B48C")} hover={btnHover("#7B3F00", "#A0522D")} active={btnActive("#CD853F", "#DEB887", "#3E2723")} />
             <SkeuoButton label="Add Payments" onClick={() => navigate("/addpayment")} {...btnBase("blue", "#1a365d", "#2c5282", "#E2E8F0")} hover={btnHover("#2a4365", "#3182ce")} active={btnActive("#63b3ed", "#90cdf4", "#1a365d")} /> */}
-            <SkeuoButton label="+ New Student" onClick={() => navigate("/create-student")} {...btnBase("green", "#22543d", "#276749", "#E2E8F0")} hover={btnHover("#276749", "#38a169")} active={btnActive("#68d391", "#9ae6b4", "#22543d")} />
+            <SkeuoButton label="+ New Student" onClick={() => navigate("/create-student")} {...btnBase("#22543d", "#276749", "#E2E8F0")} hover={btnHover("#276749", "#38a169")} active={btnActive("#68d391", "#9ae6b4", "#22543d")} />
           </div>
         </div>
 

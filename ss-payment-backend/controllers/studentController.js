@@ -2,6 +2,7 @@
 const Student = require('../models/Student');
 const Course = require('../models/Course');
 const Payment = require('../models/Payment');
+const { getInstallmentStatus, isPositiveInstallment } = require('../utils/installmentUtils');
 
 exports.getStudents = async (req, res) => {
   try {
@@ -53,7 +54,10 @@ exports.createStudent = async (req, res) => {
 
         if (remaining <= 0) break;
 
-        if (installment.status === "paid")
+        if (!isPositiveInstallment(installment))
+          continue;
+
+        if (getInstallmentStatus(installment) === "paid")
           continue;
 
         if (installment.amount <= remaining) {

@@ -87,9 +87,6 @@ export default function RecordPaymentModal({ isOpen, onClose, onSuccess }: Recor
 
   if (!isOpen) return null;
 
-  const leatherBg = "linear-gradient(135deg, #8B4513 0%, #A0522D 25%, #8B4513 50%, #6B3410 75%, #8B4513 100%)";
-  const noisePattern = `url("data:image/svg+xml,%3Csvg width='4' height='4' viewBox='0 0 4 4' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1h2v2H1z' fill='%23000' fill-opacity='0.3'/%3E%3C/svg%3E")`;
-
   const cardBase = {
     background: "linear-gradient(145deg, #F5DEB3, #DEB887, #F5DEB3)",
     boxShadow: "12px 12px 24px rgba(0,0,0,0.5), -4px -4px 12px rgba(255,255,255,0.1), inset 1px 1px 3px rgba(255,255,255,0.3)",

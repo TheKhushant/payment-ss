@@ -36,6 +36,7 @@ export default function CreateStudent() {
     incentiveTo: "",
     finalFee: 0,
     incentiveAmount: 0,
+    incentivePaid: false, // NEW
   });
 
   const [installments, setInstallments] = useState<Installment[]>([]);
@@ -193,9 +194,11 @@ export default function CreateStudent() {
     }
 
     setInstallments(updated);
+    
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
+    
     e.preventDefault();
     setError("");
 
@@ -225,14 +228,16 @@ export default function CreateStudent() {
         firstPaymentAmount: installments[0]?.amount || 0, paymentMethod,
         finalFee: formData.finalFee,
         incentiveTo: formData.incentiveTo || undefined,
+        incentiveAmount: formData.incentiveAmount,
+        incentivePaid: formData.incentivePaid,
         installments: installments.map(({ amount, dueDate }) => ({
           amount,
           dueDate,
           status: "upcoming",
         })),
-        status: "active",
+        status: "active",        
       };
-
+      console.log("Submitting Student:", payload);
       await createStudent(payload);
       navigate("/students");
     } catch (err: any) {
@@ -332,8 +337,10 @@ export default function CreateStudent() {
                 {error}
               </span>
             )}
+            
             <SkeuoButton
               label={loading ? "Saving..." : "Save Student"}
+              
               onClick={handleSubmit}
               disabled={loading}
               base={btnBase("#22543d", "#276749", "#E2E8F0")}
@@ -531,6 +538,28 @@ export default function CreateStudent() {
                       className="w-full px-4 py-3"
                       style={inputStyle}
                     />
+                  </div>
+                  <div className="mt-4 flex items-center gap-3">
+                    <input
+                      type="checkbox"
+                      id="incentivePaid"
+                      checked={formData.incentivePaid}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          incentivePaid: e.target.checked,
+                        })
+                      }
+                      className="h-5 w-5"
+                    />
+
+                    <label
+                      htmlFor="incentivePaid"
+                      className="font-bold"
+                      style={{ color: "#6B3410" }}
+                    >
+                      Incentive Paid
+                    </label>
                   </div>
                 </div>
 

@@ -24,6 +24,7 @@ export default function Students() {
     try {
       setLoading(true);
       const data = await getStudents();
+console.log("Students Data:", data);
 
       const sortedData = [...(data || [])].sort(
         (a, b) =>
@@ -269,6 +270,15 @@ export default function Students() {
                   <th className="p-4 text-left font-bold" style={{ color: "#6B3410", textShadow: "0 1px 1px rgba(255,255,255,0.5)" }}>Mobile</th>
                   {/* <th className="p-4 text-left font-bold" style={{ color: "#6B3410", textShadow: "0 1px 1px rgba(255,255,255,0.5)" }}>College</th> */}
                   <th className="p-4 text-left font-bold" style={{ color: "#6B3410", textShadow: "0 1px 1px rgba(255,255,255,0.5)" }}>Course</th>
+                  <th
+                    className="p-4 text-left font-bold"
+                    style={{
+                      color: "#6B3410",
+                      textShadow: "0 1px 1px rgba(255,255,255,0.5)",
+                    }}
+                  >
+                    Incentive
+                  </th>
                   {/* <th className="p-4 text-left font-bold" style={{ color: "#6B3410", textShadow: "0 1px 1px rgba(255,255,255,0.5)" }}>Duration</th> */}
                   <th className="p-4 text-left font-bold" style={{ color: "#6B3410", textShadow: "0 1px 1px rgba(255,255,255,0.5)" }}>Status</th>
                   <th className="p-4 text-center font-bold" style={{ color: "#6B3410", textShadow: "0 1px 1px rgba(255,255,255,0.5)" }}>Actions</th>
@@ -295,6 +305,28 @@ export default function Students() {
                       <td className="p-4 font-bold" style={{ color: "#6B3410", textShadow: "0 1px 1px rgba(255,255,255,0.5)" }}>{student.mobile}</td>
                       {/* <td className="p-4 font-bold" style={{ color: "#6B3410", textShadow: "0 1px 1px rgba(255,255,255,0.5)" }}>{student.college || "-"}</td> */}
                       <td className="p-4 font-bold" style={{ color: "#6B3410", textShadow: "0 1px 1px rgba(255,255,255,0.5)" }}>{student.courseId?.name || "-"}</td>
+                      {/* <td className="p-4 font-bold" style={{ color: "#6B3410", textShadow: "0 1px 1px rgba(255,255,255,0.5)" }}>{student.incentiveTo || "X"}</td> */}
+                      <td className="p-4">
+                        {student.incentiveAmount > 0 ? (
+                          <div className="flex flex-col">
+                            <span className="font-semibold">
+                              {student.incentiveTo || "Not Assigned"}
+                            </span>
+
+                            <span
+                              className={`text-xs ${
+                                student.incentivePaid
+                                  ? "text-green-600"
+                                  : "text-red-600"
+                              }`}
+                            >
+                              ₹{student.incentiveAmount} • {student.incentivePaid ? "Paid" : "Pending"}
+                            </span>
+                          </div>
+                        ) : (
+                          "-"
+                        )}
+                      </td>
                       {/* <td className="p-4 font-bold" style={{ color: "#6B3410", textShadow: "0 1px 1px rgba(255,255,255,0.5)" }}>{student.duration ? `${student.duration} Month` : "-"}</td> */}
                       <td className="p-4">
                         <span className="inline-flex px-3 py-1 rounded-full text-xs font-bold" style={{

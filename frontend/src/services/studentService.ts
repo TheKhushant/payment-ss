@@ -9,14 +9,7 @@ const getAuthHeaders = () => {
   };
 };
 
-// export const getStudents = async () => {
-//   const res = await fetch(API_URL, { headers: getAuthHeaders(), credentials: "include" });
-//   if (!res.ok) {
-//     const err = await res.json().catch(() => ({}));
-//     throw new Error(err.message || "Failed to fetch students");
-//   }
-//   return res.json();
-// };
+
 
 export const createStudent = async (data: any) => {
   const res = await fetch(API_URL, {

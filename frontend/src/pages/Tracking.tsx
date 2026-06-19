@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { getStudents } from "../services/studentService";
+import { getInstallmentStatus, isPositiveInstallment } from "../utils/installmentUtils";
 
 export default function Tracking() {
   const [trackingData, setTrackingData] = useState<any[]>([]);
@@ -13,8 +14,6 @@ export default function Tracking() {
   }, []);
 
   const loadData = async () => {
-    const students = await getStudents();
-    console.log("STUDENTS API DATA:", students);
     try {
       setLoading(true);
       const students = await getStudents();
@@ -25,9 +24,9 @@ export default function Tracking() {
         if (!student.installments || !Array.isArray(student.installments)) return;
 
         student.installments.forEach((installment: any) => {
-          // Skip paid installments
-          if (installment.status === "paid" || installment.status === "Paid") return;
-          console.log("INSTALLMENT", installment);
+          if (!isPositiveInstallment(installment)) return;
+          const effectiveStatus = getInstallmentStatus(installment);
+          if (effectiveStatus === "paid") return;
           rows.push({
             _id: installment._id || `${student._id}-${installment.dueDate}`,
             studentId: student._id,
@@ -38,8 +37,8 @@ export default function Tracking() {
             course: student.courseId?.name || student.course || "—",
             amount: installment.amount,
             dueDate: installment.dueDate,
-            status: installment.status || "pending",
-            fullStudent: student, // For full details
+            status: effectiveStatus,
+            fullStudent: student,
             installmentId: installment._id,
           });
         });
@@ -58,7 +57,6 @@ export default function Tracking() {
 
         return aDate - bDate;
       });
-      console.log("TRACKING ROWS", rows);
       setTrackingData(rows);
     } catch (err) {
       console.error("Error loading tracking data:", err);
@@ -69,18 +67,7 @@ export default function Tracking() {
 
   // Upcoming Payments (Next 7 days) - Sorted by due date
   const upcomingPayments = trackingData
-    .filter((p: any) => {
-      if (!p.dueDate) return false;
-      const due = new Date(p.dueDate);
-      const now = new Date();
-      now.setHours(0, 0, 0, 0); // Normalize time
-      due.setHours(0, 0, 0, 0);
-
-      const diffTime = due.getTime() - now.getTime();
-      const diffDays = Math.ceil(diffTime / (1000 * 3600 * 24));
-      
-      return diffDays >= 0 && diffDays <= 60;
-    })
+    .filter((p: any) => p.status === "upcoming")
     .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime());
 
     const upcomingTotal = upcomingPayments.reduce(
@@ -90,14 +77,7 @@ export default function Tracking() {
 
   // Overdue Payments - Sorted by due date (oldest first)
   const overduePayments = trackingData
-    .filter((p: any) => {
-      if (!p.dueDate) return false;
-      const due = new Date(p.dueDate);
-      const now = new Date();
-      now.setHours(0, 0, 0, 0);
-      due.setHours(0, 0, 0, 0);
-      return due < now;
-    })
+    .filter((p: any) => p.status === "overdue")
     .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime());
   const overdueTotal = overduePayments.reduce(
     (sum: number, p: any) => sum + Number(p.amount || 0),

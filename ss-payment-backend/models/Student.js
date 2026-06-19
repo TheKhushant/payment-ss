@@ -70,6 +70,21 @@ const studentSchema = new mongoose.Schema({
   installments: [installmentSchema],
   notes: [noteSchema],
 
+  incentiveTo: {
+    type: String,
+    default: ""
+  },
+
+  incentiveAmount: {
+    type: Number,
+    default: 0
+  },
+
+  incentivePaid: {
+    type: Boolean,
+    default: false
+  },
+
   status: {
     type: String,
     enum: [

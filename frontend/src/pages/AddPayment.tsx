@@ -4,9 +4,8 @@ import {
   createPayment,
   getStudentPayments,
 } from "../services/paymentService";
-
-
 import { getStudent } from "../services/studentService";
+import { getInstallmentStatus, isPositiveInstallment } from "../utils/installmentUtils";
 
 export default function AddPayment() {
   const { studentId } = useParams();
@@ -72,7 +71,7 @@ export default function AddPayment() {
   const pendingAmount = totalFee - totalPaid;
 
   const upcomingInstallment = student?.installments?.find(
-    (i: any) => i.status !== "paid"
+    (i: any) => isPositiveInstallment(i) && getInstallmentStatus(i) !== "paid"
   );
 
   if (loading) {
@@ -187,7 +186,7 @@ export default function AddPayment() {
               {upcomingInstallment && (
                 <InfoCard title="Upcoming Installment" data={[
                   { label: "Amount", value: `₹${upcomingInstallment.amount}` },
-                  { label: "Status", value: upcomingInstallment.status, highlight: true },
+                  { label: "Status", value: getInstallmentStatus(upcomingInstallment), highlight: true },
                 ]} />
               )}
             </div>
