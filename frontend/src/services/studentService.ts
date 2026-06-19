@@ -34,6 +34,8 @@ export const getStudent = async (id: string) => {
   return res.json();
 };
 
+
+
 export const updateStudent = async (id: string, data: any) => {
   const res = await fetch(`${API_URL}/${id}`, {
     method: "PUT",
@@ -41,6 +43,7 @@ export const updateStudent = async (id: string, data: any) => {
     credentials: "include",
     body: JSON.stringify(data),
   });
+  
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
     throw new Error(err.message || "Failed to update student");

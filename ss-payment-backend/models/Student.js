@@ -75,6 +75,12 @@ const studentSchema = new mongoose.Schema({
     default: ""
   },
 
+  incentiveStatus: {
+    type: String,
+    enum: ['pending', 'approved', 'paid'],
+    default: 'pending'
+  },
+
   incentiveAmount: {
     type: Number,
     default: 0

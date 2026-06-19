@@ -13,6 +13,22 @@ exports.getStudents = async (req, res) => {
   }
 };
 
+exports.updateStudent = async (req, res) => {
+  try {
+    const student = await Student.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true }
+    );
+
+    res.json(student);
+  } catch (err) {
+    res.status(500).json({
+      message: 'Server Error'
+    });
+  }
+};
+
 exports.getStudent = async (req, res) => {
   try {
     const student = await Student.findById(req.params.id).populate('courseId', 'name duration fee');

@@ -4,12 +4,12 @@ import {
   createPayment,
   getStudentPayments,
 } from "../services/paymentService";
-import { getStudent } from "../services/studentService";
+import { getStudent, updateStudent } from "../services/studentService";
 import { getInstallmentStatus, isPositiveInstallment } from "../utils/installmentUtils";
 
 export default function AddPayment() {
   const { studentId } = useParams();
-
+  const [incentiveStatus, setIncentiveStatus] = useState("");
   const [student, setStudent] = useState<any>(null);
   const [payments, setPayments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -32,6 +32,7 @@ export default function AddPayment() {
       const paymentData = await getStudentPayments(studentId!);
 
       setStudent(studentData);
+      setIncentiveStatus(studentData.incentiveStatus || "pending");
       setPayments(paymentData);
     } catch (err) {
       console.error(err);
@@ -40,6 +41,31 @@ export default function AddPayment() {
       setIsLoading(false); // ✅ Add this
     }
   };
+
+  const handleIncentiveStatusChange = async (
+      e: React.ChangeEvent<HTMLSelectElement>
+    ) => {
+      const status = e.target.value;
+
+      try {
+        await updateStudent(studentId!, {
+          incentiveStatus: status,
+          incentivePaid: status === "Paid",
+        });
+
+        setIncentiveStatus(status);
+
+        setStudent((prev: any) => ({
+          ...prev,
+          incentiveStatus: status,
+        }));
+
+        alert("Incentive Status Updated");
+      } catch (err) {
+        console.error(err);
+        alert("Failed to update incentive status");
+      }
+    };
 
   const handleSubmit = async () => {
     if (!amount || Number(amount) <= 0) {
@@ -81,6 +107,12 @@ export default function AddPayment() {
       </div>
     );
   }
+
+  // incentiveStatus: {
+  //   type: String,
+  //   enum: ["Pending", "Approved", "Paid"],
+  //   default: "Pending",
+  // },
 
   return (
     <div className="min-h-screen p-6 relative overflow-hidden" style={{
@@ -164,6 +196,27 @@ export default function AddPayment() {
                 }}>
                   {student.status}
                 </span>
+              </div>
+              <div>
+                <span
+                  className="font-bold"
+                  style={{
+                    color: "#8B4513",
+                    textShadow: "0 1px 1px rgba(255,255,255,0.5)",
+                  }}
+                >
+                  Incentive:
+                </span>
+
+                <select
+                  value={incentiveStatus}
+                  onChange={handleIncentiveStatusChange}
+                  className="ml-2 px-3 py-1 rounded-lg text-sm font-bold"
+                >
+                  <option value="Pending">Pending</option>
+                  {/* <option value="Approved">Approved</option> */}
+                  <option value="Paid">Paid</option>
+                </select>
               </div>
             </div>
 

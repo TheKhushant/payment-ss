@@ -19,6 +19,7 @@ router.post('/', protect, createStudent);
 router.put('/:id', protect, updateStudent);
 router.post('/:id/notes', protect, addNote);
 router.delete("/delete-all", deleteAllStudents);
+router.put('/:id', updateStudent);
 // Then this
 router.delete("/:id", deleteStudent);
 
