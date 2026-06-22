@@ -1,20 +1,25 @@
 import { Link, useLocation } from "react-router-dom";
+import { useState } from "react";
 import { 
   LayoutDashboard, 
   Users, 
   CreditCard, 
   Target, 
   BarChart3, 
-  BookOpen 
+  BookOpen ,
+  Menu
 } from "lucide-react";
 
 export default function Sidebar() {
   const location = useLocation();
-
+  const [collapsed, setCollapsed] = useState(false);
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <div className="w-72 h-screen flex flex-col relative overflow-hidden"
+    <div
+  className={`${
+    collapsed ? "w-20" : "w-72"
+  } h-screen flex flex-col relative overflow-hidden transition-all duration-300`}
       style={{
         // Leather texture background with gradient
         background: "linear-gradient(135deg, #8B4513 0%, #A0522D 25%, #8B4513 50%, #6B3410 75%, #8B4513 100%)",
@@ -35,73 +40,115 @@ export default function Sidebar() {
 
       {/* Content container */}
       <div className="relative z-10 flex flex-col h-full p-6">
-        
+        <div className="flex justify-end mb-4">
+          <button
+            onClick={() => setCollapsed(!collapsed)}
+            className="p-2 rounded-lg"
+            style={{
+              background:
+                "linear-gradient(145deg, #B8860B, #DAA520, #B8860B)",
+              boxShadow:
+                "inset 2px 2px 5px rgba(255,255,255,0.4), inset -2px -2px 5px rgba(0,0,0,0.3)",
+            }}
+          >
+            <Menu size={20} />
+          </button>
+        </div>
         {/* Logo / Title - Embossed metal plate effect */}
-        <div className="mb-10 p-4 rounded-lg"
+        <div
+          className={`mb-10 rounded-lg ${
+            collapsed ? "p-2" : "p-4"
+          }`}
           style={{
             background: "linear-gradient(145deg, #B8860B, #DAA520, #B8860B)",
             boxShadow: "inset 2px 2px 5px rgba(255,255,255,0.4), inset -2px -2px 5px rgba(0,0,0,0.3), 3px 3px 8px rgba(0,0,0,0.4)",
             border: "1px solid #8B6914",
           }}
         >
-          <h1 className="text-2xl font-bold text-center"
-            style={{
-              color: "#4A3728",
-              textShadow: "1px 1px 2px rgba(255,255,255,0.6), -1px -1px 1px rgba(0,0,0,0.3)",
-            }}
-          >
-            Fee Portal
-          </h1>
-          <p className="text-xs text-center mt-1 font-semibold"
-            style={{
-              color: "#5C4033",
-              textShadow: "0 1px 1px rgba(255,255,255,0.4)",
-            }}
-          >
-            Student Management
-          </p>
+          {collapsed ? (
+              <div className="flex justify-center">
+                <BookOpen size={28} color="#4A3728" />
+              </div>
+            ) : (
+              <>
+                <h1
+                  className="text-2xl font-bold text-center"
+                  style={{
+                    color: "#4A3728",
+                    textShadow:
+                      "1px 1px 2px rgba(255,255,255,0.6), -1px -1px 1px rgba(0,0,0,0.3)",
+                  }}
+                >
+                  Fee Portal
+                </h1>
+
+                <p
+                  className="text-xs text-center mt-1 font-semibold"
+                  style={{
+                    color: "#5C4033",
+                    textShadow: "0 1px 1px rgba(255,255,255,0.4)",
+                  }}
+                >
+                  Student Management
+                </p>
+              </>
+            )}
         </div>
 
         <nav className="flex-1 space-y-6">
           {/* Overview Section */}
           <div>
-            <h2 className="text-xs font-bold uppercase tracking-widest mb-3 px-3"
-              style={{
-                color: "#D2B48C",
-                textShadow: "1px 1px 2px rgba(0,0,0,0.8)",
-                letterSpacing: "0.15em",
-              }}
-            >
-              Overview
-            </h2>
+            {!collapsed && (
+              <h2
+                className="text-xs font-bold uppercase tracking-widest mb-3 px-3"
+                style={{
+                  color: "#D2B48C",
+                  textShadow: "1px 1px 2px rgba(0,0,0,0.8)",
+                  letterSpacing: "0.15em",
+                }}
+              >
+                Overview
+              </h2>
+            )}
             <div className="flex flex-col gap-2">
-              <SidebarLink to="/" icon={<LayoutDashboard size={18} />} label="Dashboard" isActive={isActive("/")} />
-              <SidebarLink to="/students" icon={<Users size={18} />} label="Students" isActive={isActive("/students")} />
-              <SidebarLink to="/payments" icon={<CreditCard size={18} />} label="Payments" isActive={isActive("/payments")} />
-              <SidebarLink to="/tracking" icon={<Target size={18} />} label="Tracking" isActive={isActive("/tracking")} />
+              {/* <SidebarLink to="/" icon={<LayoutDashboard size={18} />} label="Dashboard" isActive={isActive("/")} /> */}
+              <SidebarLink
+                to="/"
+                icon={<LayoutDashboard size={18} />}
+                label="Dashboard"
+                isActive={isActive("/")}
+                collapsed={collapsed}
+              />
+              <SidebarLink to="/students" icon={<Users size={18} />} label="Students" isActive={isActive("/students")} collapsed={collapsed} />
+              <SidebarLink to="/payments" icon={<CreditCard size={18} />} label="Payments" isActive={isActive("/payments")} collapsed={collapsed} />
+              <SidebarLink to="/tracking" icon={<Target size={18} />} label="Tracking" isActive={isActive("/tracking")} collapsed={collapsed} />
             </div>
           </div>
 
           {/* Manage Section */}
           <div>
-            <h2 className="text-xs font-bold uppercase tracking-widest mb-3 px-3"
-              style={{
-                color: "#D2B48C",
-                textShadow: "1px 1px 2px rgba(0,0,0,0.8)",
-                letterSpacing: "0.15em",
-              }}
-            >
-              Manage
-            </h2>
+            {!collapsed && (
+              <h2
+                className="text-xs font-bold uppercase tracking-widest mb-3 px-3"
+                style={{
+                  color: "#D2B48C",
+                  textShadow: "1px 1px 2px rgba(0,0,0,0.8)",
+                  letterSpacing: "0.15em",
+                }}
+              >
+                Manage
+              </h2>
+            )}
             <div className="flex flex-col gap-2">
-              <SidebarLink to="/analytics" icon={<BarChart3 size={18} />} label="Analytics" isActive={isActive("/analytics")} />
-              <SidebarLink to="/courses" icon={<BookOpen size={18} />} label="Courses" isActive={isActive("/courses")} />
+              <SidebarLink to="/analytics" icon={<BarChart3 size={18} />} label="Analytics" isActive={isActive("/analytics")} collapsed={collapsed}/>
+              <SidebarLink to="/courses" icon={<BookOpen size={18} />} label="Courses" isActive={isActive("/courses")} collapsed={collapsed} />
             </div>
           </div>
         </nav>
 
         {/* Footer - Metal badge style */}
         <div className="pt-4 mt-auto">
+          {!collapsed && (
           <div className="p-3 rounded-full text-center text-xs font-bold"
             style={{
               background: "linear-gradient(145deg, #C0C0C0, #E8E8E8, #A0A0A0)",
@@ -113,6 +160,7 @@ export default function Sidebar() {
           >
             © 2026 Design & Developed by <br/> SS Infotech
           </div>
+          )}
         </div>
       </div>
     </div>
@@ -120,11 +168,25 @@ export default function Sidebar() {
 }
 
 // Extracted component for 3D button effect
-function SidebarLink({ to, icon, label, isActive }: { to: string; icon: React.ReactNode; label: string; isActive: boolean }) {
+function SidebarLink({
+  to,
+  icon,
+  label,
+  isActive,
+  collapsed,
+}: {
+  to: string;
+  icon: React.ReactNode;
+  label: string;
+  isActive: boolean;
+  collapsed: boolean;
+}) {
   return (
     <Link
       to={to}
-      className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-bold transition-all duration-150 relative overflow-hidden"
+      className={`flex items-center ${
+        collapsed ? "justify-center" : "gap-3"
+      } px-4 py-3 rounded-lg text-sm font-bold transition-all duration-300`}
       style={{
         // 3D raised button effect
         background: isActive 
@@ -178,7 +240,11 @@ function SidebarLink({ to, icon, label, isActive }: { to: string; icon: React.Re
         }}>
           {icon}
         </span>
-        {label}
+        {!collapsed && (
+            <span>
+              {label}
+            </span>
+          )}
       </span>
     </Link>
   );

@@ -174,14 +174,24 @@ console.log("Students Data:", data);
             </h1>
           </div>
 
-          <SkeuoButton
-            label="Delete All Students"
-            onClick={handleDeleteAll}
-            disabled={true}
-            base={btnBase("#c53030", "#e53e3e", "#fff")}
-            hover={btnHover("#e53e3e", "#fc8181")}
-            active={btnActive("#fc8181", "#feb2b2", "#c53030")}
-          />
+          <div className="flex gap-3">
+            <SkeuoButton
+              label="+ Add Student"
+              onClick={() => navigate("/create-student")}
+              base={btnBase("#22543d", "#276749", "#E2E8F0")}
+              hover={btnHover("#276749", "#38a169")}
+              active={btnActive("#68d391", "#9ae6b4", "#22543d")}
+            />
+
+            <SkeuoButton
+              label="Delete All Students"
+              onClick={handleDeleteAll}
+              disabled={true}
+              base={btnBase("#c53030", "#e53e3e", "#fff")}
+              hover={btnHover("#e53e3e", "#fc8181")}
+              active={btnActive("#fc8181", "#feb2b2", "#c53030")}
+            />
+          </div>
         </div>
 
         {/* Filters Bar */}
