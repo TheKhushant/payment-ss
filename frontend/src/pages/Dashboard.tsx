@@ -53,8 +53,23 @@ export default function Dashboard() {
   };
 
   const totalStudents = students.length;
-  const activeStudents = students.filter((s: any) => s.status === "active" || !s.status).length;
-  const totalRevenue = payments.reduce((sum: number, p: any) => sum + Number(p.amount || 0), 0);
+
+  const totalAmount = students.reduce(
+    (sum: number, student: any) =>
+      sum +
+      (
+        Number(student.courseFee || 0) -
+        Number(student.discount || 0) -
+        Number(student.scholarship || 0)
+      ),
+    0
+  );
+
+  const totalRevenue = payments.reduce(
+    (sum: number, p: any) => sum + Number(p.amount || 0),
+    0
+  );
+  
   const today = new Date().toISOString().split("T")[0];
   const todaysCollections = payments.filter((p: any) => p.paymentDate?.split("T")[0] === today).reduce((sum: number, p: any) => sum + Number(p.amount || 0), 0);
   const currentMonth = new Date().toISOString().slice(0, 7);
@@ -170,7 +185,13 @@ export default function Dashboard() {
         {/* Metrics Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-8 gap-4 mb-6">
           <MetricCard title="Total Students" value={totalStudents.toString()} color="#4A3728" />
-          <MetricCard title="Active Students" value={activeStudents.toString()} color="#2F855A" />
+          
+          <MetricCard
+            title="Total Amount"
+            value={`₹${totalAmount.toLocaleString()}`}
+            color="#2F855A"
+          />
+
           <MetricCard title="Total Revenue" value={`₹${totalRevenue.toLocaleString()}`} color="#4A3728" />
           <MetricCard title="Today's Collections" value={`₹${todaysCollections.toLocaleString()}`} color="#2F855A" />
           <MetricCard title="Monthly Collection" value={`₹${monthlyCollection.toLocaleString()}`} color="#4A3728" />
