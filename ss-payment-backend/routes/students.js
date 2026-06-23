@@ -13,13 +13,13 @@ const {
 } = require('../controllers/studentController');
 
 // All routes are protected (require login)
+router.delete("/delete-all", deleteAllStudents);
 router.get('/', protect, getStudents);
 router.get('/:id', protect, getStudent);
 router.post('/', protect, createStudent);
 router.put('/:id', protect, updateStudent);
 router.post('/:id/notes', protect, addNote);
-router.delete("/delete-all", deleteAllStudents);
-router.put('/:id', updateStudent);
+// router.put('/:id', updateStudent);
 // Then this
 router.delete("/:id", deleteStudent);
 

@@ -1,4 +1,4 @@
-import { deleteAllStudents, getStudents } from "../services/studentService";
+import { deleteAllStudents, getStudents, deleteStudent } from "../services/studentService";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {IndianRupee} from "lucide-react"
@@ -80,24 +80,44 @@ console.log("Students Data:", data);
 
   const handleDeleteAll = async () => {
     const confirmed = window.confirm(
-      "⚠️ Are you sure?\n\nThis will permanently delete ALL students."
+      "⚠️ Are you sure?\n\nThis will delete ALL students and their records permanently."
     );
 
     if (!confirmed) return;
 
     try {
-      await deleteAllStudents();
+      const response = await deleteAllStudents();
 
-      alert("All students deleted successfully.");
+      alert(response.message || "All students deleted successfully");
 
-      setStudents([]);
-      setFilteredStudents([]);
+      loadStudents();
     } catch (error) {
       console.error(error);
-      alert("Failed to delete students.");
+      alert("Failed to delete all students");
     }
   };
 
+  const handleDeleteStudent = async (
+    studentId: string,
+    studentName: string
+  ) => {
+    const confirmed = window.confirm(
+      `Delete ${studentName}?\n\nAll payment history will also be deleted.`
+    );
+
+    if (!confirmed) return;
+
+    try {
+      await deleteStudent(studentId);
+
+      alert("Student deleted successfully");
+
+      loadStudents();
+    } catch (error) {
+      console.error(error);
+      alert("Failed to delete student");
+    }
+  };
   
   const leatherBg = "linear-gradient(135deg, #8B4513 0%, #A0522D 25%, #8B4513 50%, #6B3410 75%, #8B4513 100%)";
   const leatherShadow = "inset 0 0 60px rgba(0,0,0,0.5)";
@@ -354,36 +374,30 @@ console.log("Students Data:", data);
                         </span>
                       </td>
                       <td className="p-4 text-center">
-                        <button
-                          onClick={() => navigate(`/payments/new/${student._id}`)}
-                          className="p-2 rounded-lg transition-all duration-150"
-                          style={{
-                            background: "linear-gradient(145deg, #3182ce, #63b3ed, #3182ce)",
-                            boxShadow: "3px 3px 6px rgba(0,0,0,0.3), -1px -1px 3px rgba(255,255,255,0.2), inset 1px 1px 2px rgba(255,255,255,0.3)",
-                            border: "1px solid rgba(0,0,0,0.2)",
-                            color: "#fff",
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.background = "linear-gradient(145deg, #2b6cb0, #4299e1, #2b6cb0)";
-                            e.currentTarget.style.transform = "translateY(-1px)";
-                            e.currentTarget.style.boxShadow = "4px 4px 8px rgba(0,0,0,0.4), -1px -1px 3px rgba(255,255,255,0.3), inset 1px 1px 2px rgba(255,255,255,0.4)";
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.background = "linear-gradient(145deg, #3182ce, #63b3ed, #3182ce)";
-                            e.currentTarget.style.transform = "translateY(0)";
-                            e.currentTarget.style.boxShadow = "3px 3px 6px rgba(0,0,0,0.3), -1px -1px 3px rgba(255,255,255,0.2), inset 1px 1px 2px rgba(255,255,255,0.3)";
-                          }}
-                          onMouseDown={(e) => {
-                            e.currentTarget.style.transform = "translateY(1px)";
-                            e.currentTarget.style.boxShadow = "inset 2px 2px 5px rgba(0,0,0,0.3), inset -1px -1px 3px rgba(255,255,255,0.2)";
-                          }}
-                          onMouseUp={(e) => {
-                            e.currentTarget.style.transform = "translateY(-1px)";
-                            e.currentTarget.style.boxShadow = "4px 4px 8px rgba(0,0,0,0.4), -1px -1px 3px rgba(255,255,255,0.3), inset 1px 1px 2px rgba(255,255,255,0.4)";
-                          }}
-                        >
-                          <IndianRupee size={16} style={{ filter: "drop-shadow(1px 1px 1px rgba(0,0,0,0.5))" }} />
-                        </button>
+                        <div className="flex justify-center gap-2">
+
+                          {/* Payment Button */}
+                          <button
+                            onClick={() => navigate(`/payments/new/${student._id}`)}
+                            className="p-2 rounded-lg bg-blue-600 text-white"
+                          >
+                            <IndianRupee size={16} />
+                          </button>
+
+                          {/* Delete Button */}
+                          <button
+                            onClick={() =>
+                              handleDeleteStudent(
+                                student._id,
+                                student.name
+                              )
+                            }
+                            className="px-3 py-2 bg-red-600 text-white rounded"
+                          >
+                            Delete
+                          </button>
+
+                        </div>
                       </td>
                     </tr>
                   ))

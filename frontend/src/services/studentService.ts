@@ -95,7 +95,11 @@ export const getStudents = async () => {
 
 export const deleteAllStudents = async () => {
   const response = await axios.delete(
-    "http://localhost:5000/api/students/delete-all"
+    "http://localhost:5000/api/students/delete-all",
+    {
+      headers: getAuthHeaders(),
+      withCredentials: true,
+    }
   );
 
   return response.data;

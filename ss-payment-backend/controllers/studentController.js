@@ -116,11 +116,35 @@ exports.updateStudent = async (req, res) => {
 
 exports.deleteStudent = async (req, res) => {
   try {
-    const student = await Student.findByIdAndDelete(req.params.id);
-    if (!student) return res.status(404).json({ message: 'Student not found' });
-    res.json({ message: 'Student deleted successfully' });
+    const studentId = req.params.id;
+
+    const student = await Student.findById(studentId);
+
+    if (!student) {
+      return res.status(404).json({
+        message: "Student not found"
+      });
+    }
+
+    // Delete all payments of this student
+    await Payment.deleteMany({
+      studentId: studentId
+    });
+
+    // Delete student
+    await Student.findByIdAndDelete(studentId);
+
+    res.json({
+      success: true,
+      message: "Student and all related payments deleted successfully"
+    });
+
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    console.error(err);
+
+    res.status(500).json({
+      message: err.message
+    });
   }
 };
 
