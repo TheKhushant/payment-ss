@@ -119,15 +119,58 @@ export default function Payments() {
     setFilteredPayments(result);
   }, [searchTerm, selectedCourse, selectedDuration, selectedMethod, selectedStatus, payments]);
 
-  // Get unique values for filters
   const courses = [
     "All",
-    ...new Set(
-      payments
-        .map((p) => p.studentId?.courseId?.name || p.course)
-        .filter(Boolean)
+    ...Array.from(
+      new Set(
+        payments
+          .map((p) => p.studentId?.courseId?.name)
+          .filter(Boolean)
+      )
     ),
   ];
+
+  const uniqueStudents = [
+    ...new Map(
+      filteredPayments.map((p) => [
+        p.studentId?._id,
+        p.studentId,
+      ])
+    ).values(),
+  ];
+
+  const totalAmount = uniqueStudents.reduce(
+    (sum: number, student: any) => {
+      const totalFee =
+        Number(student?.courseFee || 0) -
+        Number(student?.discount || 0) -
+        Number(student?.scholarship || 0);
+
+      return sum + totalFee;
+    },
+    0
+  );
+
+  const paidAmount = filteredPayments.reduce(
+    (sum, p) => sum + Number(p.amount || 0),
+    0
+  );
+
+  const pendingAmount = uniqueStudents.reduce(
+    (sum: number, student: any) => {
+      const totalFee =
+        Number(student?.courseFee || 0) -
+        Number(student?.discount || 0) -
+        Number(student?.scholarship || 0);
+
+      const totalPaid = payments
+        .filter((p) => p.studentId?._id === student?._id)
+        .reduce((s, p) => s + Number(p.amount || 0), 0);
+
+      return sum + Math.max(0, totalFee - totalPaid);
+    },
+    0
+  );
 
   // Export to CSV
   const exportToCSV = () => {
@@ -223,34 +266,97 @@ export default function Payments() {
 
       <div className="relative z-10">
         {/* Header */}
-        <div className="flex justify-between items-center mb-6">
-          <div className="p-4 rounded-lg" style={{
+        <div className="flex items-center justify-between gap-4 mb-6 flex-wrap">
+
+        {/* Payment Title */}
+        <div
+          className="px-5 py-3 rounded-lg"
+          style={{
             background: "linear-gradient(145deg, #B8860B, #DAA520, #B8860B)",
-            boxShadow: "inset 2px 2px 5px rgba(255,255,255,0.4), inset -2px -2px 5px rgba(0,0,0,0.3), 3px 3px 8px rgba(0,0,0,0.4)",
+            boxShadow:
+              "inset 2px 2px 5px rgba(255,255,255,0.4), inset -2px -2px 5px rgba(0,0,0,0.3), 3px 3px 8px rgba(0,0,0,0.4)",
             border: "1px solid #8B6914",
-          }}>
-            <h1 className="text-3xl font-bold" style={{ color: "#4A3728", textShadow: "1px 1px 2px rgba(255,255,255,0.6), -1px -1px 1px rgba(0,0,0,0.3)" }}>
-              Payments
-            </h1>
+          }}
+        >
+          <h1
+            className="text-3xl font-bold"
+            style={{
+              color: "#4A3728",
+              textShadow:
+                "1px 1px 2px rgba(255,255,255,0.6), -1px -1px 1px rgba(0,0,0,0.3)",
+            }}
+          >
+            Payments
+          </h1>
+        </div>
+
+        {/* Summary Cards */}
+        <div className="flex gap-3 flex-wrap flex-1 justify-center">
+
+          <div
+            className="px-6 py-3 min-w-[180px] relative overflow-hidden"
+            style={cardBase}
+          >
+            <div style={cardHighlight} />
+            <div className="relative z-10">
+              <p className="text-xs font-bold text-gray-700">Total Amount</p>
+              <h3 className="text-xl font-bold text-green-800">
+                ₹{totalAmount.toLocaleString()}
+              </h3>
+            </div>
           </div>
 
-          <div className="flex gap-3">
-            <SkeuoButton
-              label="📥 Export CSV"
-              onClick={exportToCSV}
-              base={btnBase("#4A5568", "#718096", "#E2E8F0")}
-              hover={btnHover("#2D3748", "#4A5568")}
-              active={btnActive("#A0AEC0", "#CBD5E0", "#2D3748")}
-            />
-            <SkeuoButton
-              label="+ Add Payment"
-              onClick={handleAddPayment}
-              base={btnBase("#22543d", "#276749", "#E2E8F0")}
-              hover={btnHover("#276749", "#38a169")}
-              active={btnActive("#68d391", "#9ae6b4", "#22543d")}
-            />
+          <div
+            className="px-6 py-3 min-w-[180px] relative overflow-hidden"
+            style={cardBase}
+          >
+            <div style={cardHighlight} />
+            <div className="relative z-10">
+              <p className="text-xs font-bold text-gray-700">Paid Amount</p>
+              <h3 className="text-xl font-bold text-green-700">
+                ₹{paidAmount.toLocaleString()}
+              </h3>
+            </div>
           </div>
+
+          <div
+            className="px-6 py-3 min-w-[180px] relative overflow-hidden"
+            style={cardBase}
+          >
+            <div style={cardHighlight} />
+            <div className="relative z-10">
+              <p className="text-xs font-bold text-gray-700">Pending Amount</p>
+              <h3 className="text-xl font-bold text-orange-700">
+                ₹{pendingAmount.toLocaleString()}
+              </h3>
+            </div>
+          </div>
+
         </div>
+
+        {/* Buttons */}
+        <div className="flex gap-3">
+
+          <SkeuoButton
+            label="📥 Export CSV"
+            onClick={exportToCSV}
+            base={btnBase("#4A5568", "#718096", "#E2E8F0")}
+            hover={btnHover("#2D3748", "#4A5568")}
+            active={btnActive("#A0AEC0", "#CBD5E0", "#2D3748")}
+          />
+
+          <SkeuoButton
+            label="+ Add Payment"
+            onClick={handleAddPayment}
+            base={btnBase("#22543d", "#276749", "#E2E8F0")}
+            hover={btnHover("#276749", "#38a169")}
+            active={btnActive("#68d391", "#9ae6b4", "#22543d")}
+          />
+
+        </div>
+
+      </div>
+
 
         {/* Filters Bar */}
         <div className="p-5 mb-6 flex flex-wrap gap-4 items-end relative" style={cardBase}>
