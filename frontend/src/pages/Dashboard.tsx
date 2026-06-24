@@ -192,9 +192,9 @@ export default function Dashboard() {
             color="#2F855A"
           />
 
-          <MetricCard title="Total Revenue" value={`₹${totalRevenue.toLocaleString()}`} color="#4A3728" />
-          <MetricCard title="Today's Collections" value={`₹${todaysCollections.toLocaleString()}`} color="#2F855A" />
-          <MetricCard title="Monthly Collection" value={`₹${monthlyCollection.toLocaleString()}`} color="#4A3728" />
+          <MetricCard title="Total Paid" value={`₹${totalRevenue.toLocaleString()}`} color="#4A3728" />
+          {/* <MetricCard title="Today's Collections" value={`₹${todaysCollections.toLocaleString()}`} color="#2F855A" />
+          <MetricCard title="Monthly Collection" value={`₹${monthlyCollection.toLocaleString()}`} color="#4A3728" /> */}
           <MetricCard title="Pending Amount" value={`₹${pendingAmount.toLocaleString()}`} color="#C05621" />
           <MetricCard title="Upcoming Payments" value={upcomingPayments.length.toString()} color="#4A3728" />
           <MetricCard title="Overdue Payments" value={overduePayments.length.toString()} color="#C53030" />
