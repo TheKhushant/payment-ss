@@ -71,9 +71,9 @@ export default function Dashboard() {
   );
   
   const today = new Date().toISOString().split("T")[0];
-  const todaysCollections = payments.filter((p: any) => p.paymentDate?.split("T")[0] === today).reduce((sum: number, p: any) => sum + Number(p.amount || 0), 0);
-  const currentMonth = new Date().toISOString().slice(0, 7);
-  const monthlyCollection = payments.filter((p: any) => p.paymentDate?.startsWith(currentMonth)).reduce((sum: number, p: any) => sum + Number(p.amount || 0), 0);
+  // const todaysCollections = payments.filter((p: any) => p.paymentDate?.split("T")[0] === today).reduce((sum: number, p: any) => sum + Number(p.amount || 0), 0);
+  // const currentMonth = new Date().toISOString().slice(0, 7);
+  // const monthlyCollection = payments.filter((p: any) => p.paymentDate?.startsWith(currentMonth)).reduce((sum: number, p: any) => sum + Number(p.amount || 0), 0);
   const pendingAmount = trackingData.reduce((sum: number, p: any) => sum + Number(p.amount || 0), 0);
 
   const upcomingPayments = trackingData.filter((p: any) => p.status === "upcoming").sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime());
