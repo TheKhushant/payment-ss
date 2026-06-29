@@ -1,7 +1,8 @@
 import axios, { AxiosHeaders } from "axios";
 
 const api = axios.create({
-  baseURL: "http://localhost:5000/api",
+  // baseURL: "http://localhost:5000/api",
+  baseURL: "https://payment-ss.onrender.com/api",
   headers: {
     "Content-Type": "application/json",
   },

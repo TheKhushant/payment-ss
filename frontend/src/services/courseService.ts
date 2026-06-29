@@ -1,4 +1,5 @@
-const API_URL = "http://localhost:5000/api/courses";
+// const API_URL = "http://localhost:5000/api/courses";
+const API_URL = "https://payment-ss.onrender.com/api/courses";
 
 const getAuthHeaders = () => {
   const token = localStorage.getItem("token");

@@ -49,7 +49,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setLoading(true);
     try {
       const { data } = await axios.post(
-        "http://localhost:5000/api/auth/login",
+        // "http://localhost:5000/api/auth/login",
+        "https://payment-ss.onrender.com/api/auth/login",
         { email, password }
       );
 

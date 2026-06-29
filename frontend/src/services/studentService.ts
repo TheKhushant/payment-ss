@@ -1,4 +1,5 @@
-const API_URL = "http://localhost:5000/api/students";
+// const API_URL = "http://localhost:5000/api/students";
+const API_URL = "https://payment-ss.onrender.com/api/students";
 import axios from "axios";
 
 const getAuthHeaders = () => {
@@ -8,8 +9,6 @@ const getAuthHeaders = () => {
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
   };
 };
-
-
 
 export const createStudent = async (data: any) => {
   const res = await fetch(API_URL, {
@@ -95,7 +94,8 @@ export const getStudents = async () => {
 
 export const deleteAllStudents = async () => {
   const response = await axios.delete(
-    "http://localhost:5000/api/students/delete-all",
+    "https://payment-ss.onrender.com/api/students/delete-all",
+    // "http://localhost:5000/api/students/delete-all",
     {
       headers: getAuthHeaders(),
       withCredentials: true,
