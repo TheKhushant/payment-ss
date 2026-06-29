@@ -1,0 +1,504 @@
+[{
+  "_id": {
+    "$oid": "6a3918689d925ea6b1d5bf9a"
+  },
+  "studentId": {
+    "$oid": "6a3918689d925ea6b1d5bf97"
+  },
+  "amount": 14000,
+  "method": "UPI",
+  "transactionId": "TXN-1782126696812",
+  "date": {
+    "$date": "2026-06-22T11:11:36.812Z"
+  },
+  "createdAt": {
+    "$date": "2026-06-22T11:11:36.813Z"
+  },
+  "updatedAt": {
+    "$date": "2026-06-22T11:11:36.813Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6a3918ae9d925ea6b1d5bfaa"
+  },
+  "studentId": {
+    "$oid": "6a3918ae9d925ea6b1d5bfa7"
+  },
+  "amount": 9000,
+  "method": "Cash",
+  "transactionId": "TXN-1782126766186",
+  "date": {
+    "$date": "2026-06-22T11:12:46.186Z"
+  },
+  "createdAt": {
+    "$date": "2026-06-22T11:12:46.187Z"
+  },
+  "updatedAt": {
+    "$date": "2026-06-22T11:12:46.187Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6a3919849d925ea6b1d5c032"
+  },
+  "studentId": {
+    "$oid": "6a3919849d925ea6b1d5c02f"
+  },
+  "amount": 20000,
+  "method": "UPI",
+  "transactionId": "TXN-1782126980731",
+  "date": {
+    "$date": "2026-06-22T11:16:20.731Z"
+  },
+  "createdAt": {
+    "$date": "2026-06-22T11:16:20.732Z"
+  },
+  "updatedAt": {
+    "$date": "2026-06-22T11:16:20.732Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6a3919aa9d925ea6b1d5c05a"
+  },
+  "studentId": {
+    "$oid": "6a3919a99d925ea6b1d5c057"
+  },
+  "amount": 20000,
+  "method": "Cash",
+  "transactionId": "TXN-1782127018189",
+  "date": {
+    "$date": "2026-06-22T11:16:58.189Z"
+  },
+  "createdAt": {
+    "$date": "2026-06-22T11:16:58.190Z"
+  },
+  "updatedAt": {
+    "$date": "2026-06-22T11:16:58.190Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6a3919f29d925ea6b1d5c08e"
+  },
+  "studentId": {
+    "$oid": "6a3919f19d925ea6b1d5c08b"
+  },
+  "amount": 9000,
+  "method": "Cash",
+  "transactionId": "TXN-1782127090014",
+  "date": {
+    "$date": "2026-06-22T11:18:10.014Z"
+  },
+  "createdAt": {
+    "$date": "2026-06-22T11:18:10.015Z"
+  },
+  "updatedAt": {
+    "$date": "2026-06-22T11:18:10.015Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6a391a3c9d925ea6b1d5c0ce"
+  },
+  "studentId": {
+    "$oid": "6a391a3b9d925ea6b1d5c0cb"
+  },
+  "amount": 8000,
+  "method": "UPI",
+  "transactionId": "TXN-1782127164012",
+  "date": {
+    "$date": "2026-06-22T11:19:24.012Z"
+  },
+  "createdAt": {
+    "$date": "2026-06-22T11:19:24.012Z"
+  },
+  "updatedAt": {
+    "$date": "2026-06-22T11:19:24.012Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6a391b029d925ea6b1d5c162"
+  },
+  "studentId": {
+    "$oid": "6a391b029d925ea6b1d5c15f"
+  },
+  "amount": 8000,
+  "method": "Cash",
+  "transactionId": "TXN-1782127362817",
+  "date": {
+    "$date": "2026-06-22T11:22:42.818Z"
+  },
+  "createdAt": {
+    "$date": "2026-06-22T11:22:42.818Z"
+  },
+  "updatedAt": {
+    "$date": "2026-06-22T11:22:42.818Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6a391b5e9d925ea6b1d5c1ba"
+  },
+  "studentId": {
+    "$oid": "6a391b5e9d925ea6b1d5c1b7"
+  },
+  "amount": 15000,
+  "method": "Cash",
+  "transactionId": "TXN-1782127454243",
+  "date": {
+    "$date": "2026-06-22T11:24:14.244Z"
+  },
+  "createdAt": {
+    "$date": "2026-06-22T11:24:14.244Z"
+  },
+  "updatedAt": {
+    "$date": "2026-06-22T11:24:14.244Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6a391bc69d925ea6b1d5c21e"
+  },
+  "studentId": {
+    "$oid": "6a391bc69d925ea6b1d5c21b"
+  },
+  "amount": 17000,
+  "method": "Cash",
+  "transactionId": "TXN-1782127558502",
+  "date": {
+    "$date": "2026-06-22T11:25:58.502Z"
+  },
+  "createdAt": {
+    "$date": "2026-06-22T11:25:58.503Z"
+  },
+  "updatedAt": {
+    "$date": "2026-06-22T11:25:58.503Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6a391bfb9d925ea6b1d5c28e"
+  },
+  "studentId": {
+    "$oid": "6a391bfb9d925ea6b1d5c28b"
+  },
+  "amount": 15000,
+  "method": "UPI",
+  "transactionId": "TXN-1782127611491",
+  "date": {
+    "$date": "2026-06-22T11:26:51.492Z"
+  },
+  "createdAt": {
+    "$date": "2026-06-22T11:26:51.492Z"
+  },
+  "updatedAt": {
+    "$date": "2026-06-22T11:26:51.492Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6a3929da9d925ea6b1d5c67a"
+  },
+  "studentId": {
+    "$oid": "6a3929da9d925ea6b1d5c677"
+  },
+  "amount": 25000,
+  "method": "Cash",
+  "transactionId": "TXN-1782131162953",
+  "date": {
+    "$date": "2026-06-22T12:26:02.953Z"
+  },
+  "createdAt": {
+    "$date": "2026-06-22T12:26:02.953Z"
+  },
+  "updatedAt": {
+    "$date": "2026-06-22T12:26:02.953Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6a392a7c9d925ea6b1d5c6aa"
+  },
+  "studentId": {
+    "$oid": "6a392a7c9d925ea6b1d5c6a7"
+  },
+  "amount": 25000,
+  "method": "Cash",
+  "transactionId": "TXN-1782131324503",
+  "date": {
+    "$date": "2026-06-22T12:28:44.504Z"
+  },
+  "createdAt": {
+    "$date": "2026-06-22T12:28:44.504Z"
+  },
+  "updatedAt": {
+    "$date": "2026-06-22T12:28:44.504Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6a392ae59d925ea6b1d5c6de"
+  },
+  "studentId": {
+    "$oid": "6a392ae59d925ea6b1d5c6db"
+  },
+  "amount": 10000,
+  "method": "UPI",
+  "transactionId": "TXN-1782131429592",
+  "date": {
+    "$date": "2026-06-22T12:30:29.592Z"
+  },
+  "createdAt": {
+    "$date": "2026-06-22T12:30:29.593Z"
+  },
+  "updatedAt": {
+    "$date": "2026-06-22T12:30:29.593Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6a392b869d925ea6b1d5c716"
+  },
+  "studentId": {
+    "$oid": "6a392b869d925ea6b1d5c713"
+  },
+  "amount": 3000,
+  "method": "Cash",
+  "transactionId": "TXN-1782131590623",
+  "date": {
+    "$date": "2026-06-22T12:33:10.623Z"
+  },
+  "createdAt": {
+    "$date": "2026-06-22T12:33:10.623Z"
+  },
+  "updatedAt": {
+    "$date": "2026-06-22T12:33:10.623Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6a392c419d925ea6b1d5c912"
+  },
+  "studentId": {
+    "$oid": "6a392c409d925ea6b1d5c90f"
+  },
+  "amount": 3000,
+  "method": "Cash",
+  "transactionId": "TXN-1782131777201",
+  "date": {
+    "$date": "2026-06-22T12:36:17.201Z"
+  },
+  "createdAt": {
+    "$date": "2026-06-22T12:36:17.202Z"
+  },
+  "updatedAt": {
+    "$date": "2026-06-22T12:36:17.202Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6a392cbe9d925ea6b1d5ca06"
+  },
+  "studentId": {
+    "$oid": "6a392cbd9d925ea6b1d5ca03"
+  },
+  "amount": 10000,
+  "method": "UPI",
+  "transactionId": "TXN-1782131902035",
+  "date": {
+    "$date": "2026-06-22T12:38:22.036Z"
+  },
+  "createdAt": {
+    "$date": "2026-06-22T12:38:22.036Z"
+  },
+  "updatedAt": {
+    "$date": "2026-06-22T12:38:22.036Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6a392d3d9d925ea6b1d5ca4a"
+  },
+  "studentId": {
+    "$oid": "6a392d3d9d925ea6b1d5ca47"
+  },
+  "amount": 5000,
+  "method": "UPI",
+  "transactionId": "TXN-1782132029829",
+  "date": {
+    "$date": "2026-06-22T12:40:29.830Z"
+  },
+  "createdAt": {
+    "$date": "2026-06-22T12:40:29.830Z"
+  },
+  "updatedAt": {
+    "$date": "2026-06-22T12:40:29.830Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6a392d9d9d925ea6b1d5ca92"
+  },
+  "studentId": {
+    "$oid": "6a392d9c9d925ea6b1d5ca8f"
+  },
+  "amount": 5000,
+  "method": "Cash",
+  "transactionId": "TXN-1782132125046",
+  "date": {
+    "$date": "2026-06-22T12:42:05.046Z"
+  },
+  "createdAt": {
+    "$date": "2026-06-22T12:42:05.047Z"
+  },
+  "updatedAt": {
+    "$date": "2026-06-22T12:42:05.047Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6a392e059d925ea6b1d5cb2a"
+  },
+  "studentId": {
+    "$oid": "6a392e059d925ea6b1d5cb27"
+  },
+  "amount": 5000,
+  "method": "Cash",
+  "transactionId": "TXN-1782132229688",
+  "date": {
+    "$date": "2026-06-22T12:43:49.689Z"
+  },
+  "createdAt": {
+    "$date": "2026-06-22T12:43:49.689Z"
+  },
+  "updatedAt": {
+    "$date": "2026-06-22T12:43:49.689Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6a392e4b9d925ea6b1d5cb7a"
+  },
+  "studentId": {
+    "$oid": "6a392e4a9d925ea6b1d5cb77"
+  },
+  "amount": 3000,
+  "method": "Cash",
+  "transactionId": "TXN-1782132299043",
+  "date": {
+    "$date": "2026-06-22T12:44:59.043Z"
+  },
+  "createdAt": {
+    "$date": "2026-06-22T12:44:59.044Z"
+  },
+  "updatedAt": {
+    "$date": "2026-06-22T12:44:59.044Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6a392ec99d925ea6b1d5cc26"
+  },
+  "studentId": {
+    "$oid": "6a392ec99d925ea6b1d5cc23"
+  },
+  "amount": 10000,
+  "method": "Cash",
+  "transactionId": "TXN-1782132425399",
+  "date": {
+    "$date": "2026-06-22T12:47:05.399Z"
+  },
+  "createdAt": {
+    "$date": "2026-06-22T12:47:05.399Z"
+  },
+  "updatedAt": {
+    "$date": "2026-06-22T12:47:05.399Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6a392ef49d925ea6b1d5cc82"
+  },
+  "studentId": {
+    "$oid": "6a392ef49d925ea6b1d5cc7f"
+  },
+  "amount": 3000,
+  "method": "Cash",
+  "transactionId": "TXN-1782132468508",
+  "date": {
+    "$date": "2026-06-22T12:47:48.509Z"
+  },
+  "createdAt": {
+    "$date": "2026-06-22T12:47:48.509Z"
+  },
+  "updatedAt": {
+    "$date": "2026-06-22T12:47:48.509Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6a3a2bfdd0804a5026ff63cc"
+  },
+  "studentId": {
+    "$oid": "6a3a2bfdd0804a5026ff63c9"
+  },
+  "amount": 5000,
+  "method": "Cash",
+  "transactionId": "TXN-1782197245826",
+  "date": {
+    "$date": "2026-06-23T06:47:25.827Z"
+  },
+  "createdAt": {
+    "$date": "2026-06-23T06:47:25.828Z"
+  },
+  "updatedAt": {
+    "$date": "2026-06-23T06:47:25.828Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6a3a341dd0804a5026ff69ed"
+  },
+  "studentId": {
+    "$oid": "6a391b5e9d925ea6b1d5c1b7"
+  },
+  "amount": 4000,
+  "method": "UPI",
+  "transactionId": "TXN-1782199325370",
+  "date": {
+    "$date": "2026-06-23T07:22:05.392Z"
+  },
+  "createdAt": {
+    "$date": "2026-06-23T07:22:05.393Z"
+  },
+  "updatedAt": {
+    "$date": "2026-06-23T07:22:05.393Z"
+  },
+  "__v": 0
+}]

@@ -1,0 +1,5 @@
+_id,email,password,name,__v
+6a2ba1eac4f69a41b1cec548,admin@gmail.com,$2b$10$ZRMyQBQ/aSDD066HipGEhOq9/pixcK/rBAcyacjOfwxsFpVd3k2l2,admin,0
+6a2bd15d6dfe66c3706d6b32,admin@institute.com,$2b$10$P4b5cAIWFM2kCeJhPA5OoeIsiHByInhUm29l2o5mGlcbw3UkYx5mq,Admin,0
+6a2cdf114879a97cd3abe90e,test@gmail.com,$2b$10$f9K60VuddZylPILMimHud.xMwziBYpAF8J.3DWJAfvtDXF4f1I95W,Test User,0
+6a2edf6937a5a275b58fc3ec,sdmin@gmail.com,$2b$10$YnF8lsORIX1U5/synEH5WOhlP0krx.UwoWP1r9BWqrxq6pM2XUPpq,Test User Two,0

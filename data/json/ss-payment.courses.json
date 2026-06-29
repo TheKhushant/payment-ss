@@ -1,0 +1,78 @@
+[{
+  "_id": {
+    "$oid": "6a2fc36fe3ed50352243d5dc"
+  },
+  "name": "Internship",
+  "pricing": {
+    "1": 3500,
+    "2": 4000,
+    "3": 4500,
+    "6": 5000
+  },
+  "durations": [
+    1,
+    2,
+    3,
+    6
+  ],
+  "createdAt": {
+    "$date": "2026-06-15T09:18:39.545Z"
+  },
+  "updatedAt": {
+    "$date": "2026-06-15T10:02:50.526Z"
+  },
+  "__v": 0,
+  "description": "{\"All Domain\"}"
+},
+{
+  "_id": {
+    "$oid": "6a31113de17091ad45c81f80"
+  },
+  "name": "Service Now",
+  "description": "only for 3 months",
+  "pricing": {
+    "1": 0,
+    "2": 0,
+    "3": 22000,
+    "6": 0
+  },
+  "durations": [
+    1,
+    2,
+    3,
+    6
+  ],
+  "createdAt": {
+    "$date": "2026-06-16T09:02:53.519Z"
+  },
+  "updatedAt": {
+    "$date": "2026-06-22T12:33:38.261Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6a31115be17091ad45c81f81"
+  },
+  "name": "DataBricks",
+  "description": "only of 6 months",
+  "pricing": {
+    "1": 0,
+    "2": 0,
+    "3": 0,
+    "6": 25000
+  },
+  "durations": [
+    1,
+    2,
+    3,
+    6
+  ],
+  "createdAt": {
+    "$date": "2026-06-16T09:03:23.785Z"
+  },
+  "updatedAt": {
+    "$date": "2026-06-16T09:03:23.785Z"
+  },
+  "__v": 0
+}]
